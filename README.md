@@ -54,4 +54,4 @@ git clone https://github.com/usuario/gestion-espacios-rurales.git
 cd gestion-espacios-rurales
 python3.12 venv venv
 source venv/bin/active
-pip -r install requeriments.txt
+pip -r install requirements.txt
