@@ -6,8 +6,13 @@ from .forms import EspacioForm
 # Create your views here.
 
 def listar_espacios(request):
+    filtro_reserva = request.GET.get('reserva_activa', 'todo')
     espacios = Espacio.objects.all()
-    return render(request, 'espacios/listar.html', {'espacios': espacios})
+    if filtro_reserva == 'si':
+        espacios = espacios.filter(reserva__isnull=False)
+    elif filtro_reserva == 'no':
+        espacios = espacios.filter(reserva__isnull=True)
+    return render(request, 'espacios/listar.html', {'espacios': espacios, 'filtro_reserva': filtro_reserva})
 
 def detalle_espacio(request, espacio_id):
     espacio = get_object_or_404(Espacio, id=espacio_id)
