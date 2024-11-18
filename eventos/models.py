@@ -10,4 +10,4 @@ class Evento(models.Model):
     descripcion = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return f"Evento: {self.nombre} en {self.espacio.nombre}"
+        return self.nombre

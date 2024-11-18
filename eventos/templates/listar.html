@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eventos</title>
+</head>
+<body>
+    <h1>Eventos Programados</h1>
+    <ul>
+        {% for evento in eventos %}
+            <li>
+                <strong>{{ evento.nombre }}</strong><br>
+                Espacio: {{ evento.espacio.nombre }}<br>
+                Fecha: {{ evento.fecha_inicio|date:"d/m/Y H:i" }} - {{ evento.fecha_fin|date:"d/m/Y H:i" }}<br>
+                Descripción: {{ evento.descripcion }}
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
