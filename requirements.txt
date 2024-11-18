@@ -1,0 +1,36 @@
+# Django Framework
+Django>=4.2
+
+# Database support (SQLite is built-in; for PostgreSQL)
+psycopg2>=2.9
+
+# Frontend integration and templating
+django-crispy-forms>=2.0
+crispy-bootstrap5>=0.7
+
+# Authentication and User Management
+django-allauth>=0.53
+
+# Media file management (optional if using image uploads)
+Pillow>=9.0
+
+# API and Serialization (if needed)
+djangorestframework>=3.14
+
+# Environment variable management
+python-decouple>=3.8
+
+# Deployment and security
+gunicorn>=21.0
+whitenoise>=6.5
+
+# Testing and Debugging
+pytest>=7.2
+pytest-django>=4.5
+django-debug-toolbar>=3.10
+
+# Caching (optional)
+django-redis>=5.3
+
+# Other utilities
+dj-database-url>=0.5
