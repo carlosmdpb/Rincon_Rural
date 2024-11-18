@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Reservas</title>
+</head>
+<body>
+    <h1>Mis Reservas</h1>
+    <ul>
+        {% for reserva in reservas %}
+            <li>
+                Espacio: {{ reserva.espacio.nombre }}<br>
+                Fecha: {{ reserva.fecha_inicio|date:"d/m/Y H:i" }} - {{ reserva.fecha_fin|date:"d/m/Y H:i" }}<br>
+                Estado: {{ reserva.get_estado_display }}
+            </li>
+        {% endfor %}
+    </ul>
+    <a href="{% url 'crear_reserva' %}">Crear Nueva Reserva</a>
+</body>
+</html>
