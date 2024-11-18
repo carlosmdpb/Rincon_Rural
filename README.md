@@ -52,3 +52,6 @@ Esta aplicación promueve el desarrollo rural al facilitar el acceso a recursos 
 ```bash
 git clone https://github.com/usuario/gestion-espacios-rurales.git
 cd gestion-espacios-rurales
+python3.12 venv venv
+source venv/bin/active
+pip -r install requeriments.txt
