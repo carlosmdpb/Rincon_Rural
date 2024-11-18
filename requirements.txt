@@ -1,10 +1,8 @@
-Django>=4.2,<5.0
-psycopg2>=2.9.7
-pillow>=10.0.0
-django-bootstrap-v5>=1.2.1
-django-allauth>=0.53.0
-django-debug-toolbar>=4.1.0
-python-decouple>=3.8
-djangorestframework>=3.14.0
-django-filter>=23.2
-gunicorn>=21.2.0
+# Requisitos para Python 3.8 o superior
+Django>=4.2 ; python_version >= "3.8"
+
+# Requisitos para Python 3.7
+Django==3.2 ; python_version < "3.8"
+
+# Recomendación adicional para virtual environments
+# pip>=24.0
