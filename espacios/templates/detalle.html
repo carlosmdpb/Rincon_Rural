@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle de {{ espacio.nombre }}</title>
+</head>
+<body>
+    <h1>{{ espacio.nombre }}</h1>
+    <p><strong>Ubicación:</strong> {{ espacio.ubicacion }}</p>
+    <p><strong>Capacidad:</strong> {{ espacio.capacidad }}</p>
+    <p><strong>Descripción:</strong> {{ espacio.descripcion }}</p>
+    <p><strong>Horario:</strong> {{ espacio.hora_apertura }} - {{ espacio.hora_cierre }}</p>
+    <a href="{% url 'listar_espacios' %}">Volver a la Lista</a>
+</body>
+</html>

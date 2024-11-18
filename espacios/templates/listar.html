@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Espacios Disponibles</title>
+</head>
+<body>
+    <h1>Espacios Disponibles</h1>
+    <ul>
+        {% for espacio in espacios %}
+            <li>
+                <a href="{% url 'detalle_espacio' espacio.id %}">{{ espacio.nombre }}</a>
+                - Capacidad: {{ espacio.capacidad }}
+            </li>
+        {% endfor %}
+    </ul>
+    <a href="/admin/">Ir al panel de administración</a>
+</body>
+</html>
+
