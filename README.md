@@ -52,6 +52,34 @@ Esta aplicación promueve el desarrollo rural al facilitar el acceso a recursos 
 ```bash
 git clone https://github.com/usuario/gestion-espacios-rurales.git
 cd gestion-espacios-rurales
-python3.12 venv venv
+
+### Crear un entorno virtual
+```bash
+python -m venv venv
+
+### Activar el entorno
+```bash
+# WINDOWS
+venv\Scripts\activate
+# LINUX
 source venv/bin/active
-pip -r install requirements.txt
+
+### Instalar dependencias
+```bash
+pip install -r requirements.txt
+
+### Configuración local del entorno en el archivo .env
+```bash
+DEBUG=True
+SECRET_KEY=tu_clave_secreta
+ALLOWED_HOSTS=localhost,127.0.0.1
+DATABASE_URL=sqlite:///db.sqlite3
+
+### Migración de datos
+```bash
+python manage.py migrate
+python manage.py createsuperuser
+
+### Ejecutar servidor
+```bash
+python manage.py runserver
