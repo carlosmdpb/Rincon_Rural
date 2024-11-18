@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class RinconRuralConfig(AppConfig):
+class EspaciosConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'rincon_rural'
+    name = 'espacios'
