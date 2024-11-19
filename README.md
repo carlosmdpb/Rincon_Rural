@@ -64,12 +64,6 @@ source venv/bin/active
 ### Instalar dependencias
 pip install -r requirements.txt
 
-### Configuración local del entorno en el archivo .env
-DEBUG=True
-SECRET_KEY=tu_clave_secreta
-ALLOWED_HOSTS=localhost,127.0.0.1
-DATABASE_URL=sqlite:///db.sqlite3
-
 ### Migración de datos
 python manage.py migrate
 python manage.py createsuperuser

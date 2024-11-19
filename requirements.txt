@@ -1,8 +1,2 @@
 # Requisitos para Python 3.8 o superior
-Django>=4.2 ; python_version >= "3.8"
-
-# Requisitos para Python 3.7
-Django==3.2 ; python_version < "3.8"
-
-# Recomendación adicional para virtual environments
-# pip>=24.0
+Django>=4.2 
