@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <title>Perfil de Usuario</title>
+</head>
+<body>
+    <h1>Bienvenido, {{ usuario.username }}</h1>
+    <p>Email: {{ usuario.email }}</p>
+
+    <h2>Espacios Disponibles</h2>
+    <ul>
+        {% for espacio in espacios %}
+            <li>
+                {{ espacio.nombre }} - Capacidad: {{ espacio.capacidad }}
+                <form method="post" action="{% url 'reservar_espacio' espacio.id %}">
+                    {% csrf_token %}
+                    <button type="submit">Reservar</button>
+                </form>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <h2>Mis Reservas</h2>
+    <ul>
+        {% for reserva in reservas %}
+            <li>
+                {{ reserva.espacio.nombre }}: {{ reserva.fecha_inicio|date:"d/m/Y H:i" }} - {{ reserva.fecha_fin|date:"d/m/Y H:i" }}
+                ({{ reserva.get_estado_display }})
+            </li>
+        {% endfor %}
+    </ul>
+
+    <a href="{% url 'logout' %}">Cerrar Sesión</a>
+</body>
+</html>

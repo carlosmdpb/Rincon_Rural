@@ -7,11 +7,32 @@
 </head>
 <body>
     <h1>Crear Nueva Reserva</h1>
+
+    <!-- Mostrar mensajes -->
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li class="{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <!-- Mostrar errores específicos del formulario -->
+    {% if form.errors %}
+        <ul>
+            {% for field, errors in form.errors.items %}
+                <li><strong>{{ field }}</strong>: {{ errors|join:", " }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <!-- Formulario -->
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit">Reservar</button>
     </form>
+
     <a href="{% url 'listar_reservas' %}">Volver a Mis Reservas</a>
 </body>
 </html>

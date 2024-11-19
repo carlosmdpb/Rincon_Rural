@@ -22,7 +22,7 @@ urlpatterns = [
     path('reservas/', include('reservas.urls')),
     path('eventos/', include('eventos.urls')),
     path('', include('espacios.urls')),
-
+    path('usuarios/', include('usuarios.urls')),
 ]
 
 
