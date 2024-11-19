@@ -38,3 +38,6 @@ def crear_espacio(request):
     else:
         form = EspacioForm()
     return render(request, 'espacios/crear.html', {'form': form})
+
+def welcome(request):
+    return render(request, 'welcome.html')
