@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <title>Reservar Espacio</title>
+</head>
+<body>
+    <h1>Reservar {{ espacio.nombre }}</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Confirmar Reserva</button>
+    </form>
+    <a href="{% url 'perfil_usuario' %}">Volver al Perfil</a>
+</body>
+</html>

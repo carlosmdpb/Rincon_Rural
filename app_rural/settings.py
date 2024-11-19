@@ -104,7 +104,8 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTH_USER_MODEL = 'usuarios.Usuario'
-
+LOGIN_REDIRECT_URL = '/usuarios/perfil/'       # Redirigir al inicio después de iniciar sesión
+LOGOUT_REDIRECT_URL = '/'      # Redirigir al inicio después de cerrar sesión
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
