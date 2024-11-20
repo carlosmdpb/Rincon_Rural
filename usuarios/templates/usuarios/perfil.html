@@ -1,35 +1,136 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Perfil de Usuario</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #9be79b, #3cc03c); /* Fondo gradiente verde */
+            color: #004d00;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: #e6ffe6; /* Fondo verde muy claro */
+            border: 2px solid #3cc03c;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0px 10px 15px rgba(0, 0, 0, 0.1);
+            max-width: 700px;
+            width: 100%;
+        }
+
+        h1, h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #004d00; /* Verde oscuro */
+        }
+
+        p {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1rem;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 20px 0;
+        }
+
+        ul li {
+            background: #d4f5d4; /* Fondo verde suave */
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 5px solid #3cc03c;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        ul li span {
+            color: #004d00;
+            font-size: 1rem;
+        }
+
+        ul li form {
+            margin: 0;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            color: white;
+            background: #3cc03c; /* Botones en verde brillante */
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        button:hover {
+            background: #28a028; /* Hover más oscuro */
+            transform: translateY(-3px);
+        }
+
+        a {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            text-decoration: none;
+            font-size: 1rem;
+            color: #3cc03c;
+            transition: color 0.3s ease;
+        }
+
+        a:hover {
+            color: #28a028; /* Hover del enlace */
+        }
+    </style>
 </head>
 <body>
-    <h1>Bienvenido, {{ usuario.username }}</h1>
-    <p>Email: {{ usuario.email }}</p>
+    <div class="container">
+        <h1>Bienvenido, {{ usuario.username }}</h1>
+        <p>Email: {{ usuario.email }}</p>
 
-    <h2>Espacios Disponibles</h2>
-    <ul>
-        {% for espacio in espacios %}
-            <li>
-                {{ espacio.nombre }} - Capacidad: {{ espacio.capacidad }}
-                <form method="post" action="{% url 'reservar_espacio' espacio.id %}">
-                    {% csrf_token %}
-                    <button type="submit">Reservar</button>
-                </form>
-            </li>
-        {% endfor %}
-    </ul>
+        <h2>Espacios Disponibles</h2>
+        <ul>
+            {% for espacio in espacios %}
+                <li>
+                    <span>{{ espacio.nombre }} - Capacidad: {{ espacio.capacidad }}</span>
+                    <form method="post" action="{% url 'reservar_espacio' espacio.id %}">
+                        {% csrf_token %}
+                        <button type="submit">Reservar</button>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
 
-    <h2>Mis Reservas</h2>
-    <ul>
-        {% for reserva in reservas %}
-            <li>
-                {{ reserva.espacio.nombre }}: {{ reserva.fecha_inicio|date:"d/m/Y H:i" }} - {{ reserva.fecha_fin|date:"d/m/Y H:i" }}
-                ({{ reserva.get_estado_display }})
-            </li>
-        {% endfor %}
-    </ul>
+        <h2>Mis Reservas</h2>
+        <ul>
+            {% for reserva in reservas %}
+                <li>
+                    <span>{{ reserva.espacio.nombre }}: {{ reserva.fecha_inicio|date:"d/m/Y H:i" }} - {{ reserva.fecha_fin|date:"d/m/Y H:i" }}
+                    ({{ reserva.get_estado_display }})</span>
+                </li>
+            {% endfor %}
+        </ul>
 
-    <a href="{% url 'logout' %}">Cerrar Sesión</a>
+        <a href="{% url 'logout' %}">Cerrar Sesión</a>
+    </div>
 </body>
 </html>

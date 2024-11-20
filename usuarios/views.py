@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout
 from django.contrib.auth.views import LoginView
-
+from django.contrib import messages
 from espacios.models import Espacio
 from reservas.forms import ReservaForm
 from reservas.models import Reserva
@@ -15,7 +15,7 @@ def registro(request):
         if form.is_valid():
             usuario = form.save()
             login(request, usuario)
-            return redirect('/')  # Redirige al inicio después del registro
+            return redirect('login')  # Redirige al inicio después del registro
     else:
         form = RegistroForm()
     return render(request, 'usuarios/registro.html', {'form': form})
@@ -37,15 +37,18 @@ def perfil_usuario(request):
 
 @login_required
 def reservar_espacio(request, espacio_id):
-    espacio = get_object_or_404(Espacio, id=espacio_id)  # Verifica que el espacio existe
+    espacio = get_object_or_404(Espacio, id=espacio_id)
+
     if request.method == 'POST':
-        form = ReservaForm(request.POST)
+        form = ReservaForm(request.POST, espacio=espacio)
         if form.is_valid():
             reserva = form.save(commit=False)
-            reserva.usuario = request.user  # Asocia la reserva con el usuario actual
-            reserva.espacio = espacio  # Asocia la reserva con el espacio
+            reserva.espacio = espacio
+            reserva.usuario = request.user
             reserva.save()
-            return redirect('perfil_usuario')  # Redirige al perfil del usuario
+            messages.success(request, "¡Reserva creada con éxito!")
+            return redirect('perfil_usuario')
     else:
-        form = ReservaForm()
+        form = ReservaForm(espacio=espacio)
+
     return render(request, 'usuarios/reservar_espacio.html', {'form': form, 'espacio': espacio})
