@@ -1,15 +1,113 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reservar Espacio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #9be79b, #3cc03c); /* Fondo verde suave */
+            color: #004d00; /* Texto en verde oscuro */
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: #e6ffe6; /* Fondo verde claro */
+            border: 2px solid #3cc03c;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0px 10px 15px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: #004d00; /* Verde oscuro */
+        }
+
+        p.info {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        form label {
+            font-size: 1rem;
+            margin-bottom: 5px;
+            width: 100%;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        form input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            border: 1px solid #3cc03c; /* Borde verde */
+            font-size: 1rem;
+            background: #f0fff0; /* Fondo de los campos */
+        }
+
+        form button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.2rem;
+            color: white;
+            background: #3cc03c; /* Botón verde brillante */
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        form button:hover {
+            background: #28a028; /* Hover verde más oscuro */
+            transform: translateY(-3px);
+        }
+
+        .back-link {
+            margin-top: 20px;
+            font-size: 1rem;
+            text-decoration: none;
+            color: #3cc03c;
+            transition: color 0.3s ease;
+            display: inline-block;
+        }
+
+        .back-link:hover {
+            color: #28a028; /* Hover más oscuro */
+        }
+    </style>
 </head>
 <body>
-    <h1>Reservar {{ espacio.nombre }}</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Confirmar Reserva</button>
-    </form>
-    <a href="{% url 'perfil_usuario' %}">Volver al Perfil</a>
+    <div class="container">
+        <h1>Reservar Espacio</h1>
+        <p class="info">Espacio seleccionado: <strong>{{ espacio.nombre }}</strong></p>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Confirmar Reserva</button>
+        </form>
+        <a href="{% url 'perfil_usuario' %}" class="back-link">Volver al Perfil</a>
+    </div>
 </body>
 </html>
