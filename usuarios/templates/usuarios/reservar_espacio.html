@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reservar Espacio</title>
+    <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -13,9 +14,9 @@
 
         body {
             font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #9be79b, #3cc03c); /* Fondo verde suave */
-            color: #004d00; /* Texto en verde oscuro */
-            height: 100vh;
+            background: linear-gradient(135deg, #9be79b, #3cc03c);
+            color: #004d00;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -23,7 +24,7 @@
         }
 
         .container {
-            background: #e6ffe6; /* Fondo verde claro */
+            background: #e6ffe6;
             border: 2px solid #3cc03c;
             padding: 30px 40px;
             border-radius: 12px;
@@ -31,83 +32,157 @@
             max-width: 500px;
             width: 100%;
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Centra los elementos horizontalmente */
         }
 
         h1 {
             font-size: 2rem;
             margin-bottom: 20px;
-            color: #004d00; /* Verde oscuro */
         }
 
-        p.info {
-            font-size: 1.2rem;
+        p {
             margin-bottom: 20px;
         }
 
-        form {
+        #calendario {
+            margin: 20px 0; /* Ajusta espacio arriba y abajo */
+            width: 100%; /* Ajusta al contenedor */
             display: flex;
-            flex-direction: column;
-            align-items: center;
+            justify-content: center; /* Centra internamente */
         }
 
-        form label {
+        .form-group {
+            margin-top: 30px; /* Espaciado grande entre el calendario y el selector */
+            margin-bottom: 20px;
+            width: 100%; /* Asegura que el selector de horas tome todo el ancho */
+        }
+
+        label {
             font-size: 1rem;
-            margin-bottom: 5px;
-            width: 100%;
-            text-align: left;
             font-weight: bold;
+            display: block;
+            margin-bottom: 10px;
         }
 
-        form input {
+        select {
             width: 100%;
             padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 6px;
-            border: 1px solid #3cc03c; /* Borde verde */
             font-size: 1rem;
-            background: #f0fff0; /* Fondo de los campos */
+            border: 1px solid #3cc03c;
+            border-radius: 6px;
+            background: #f0fff0;
         }
 
-        form button {
-            padding: 10px 20px;
+        button {
+            padding: 12px 25px;
             border: none;
             border-radius: 6px;
             font-size: 1.2rem;
             color: white;
-            background: #3cc03c; /* Botón verde brillante */
+            background: #3cc03c;
             cursor: pointer;
             transition: background 0.3s ease, transform 0.2s ease;
+            margin-top: 20px;
         }
 
-        form button:hover {
-            background: #28a028; /* Hover verde más oscuro */
+        button:hover {
+            background: #28a028;
             transform: translateY(-3px);
         }
 
         .back-link {
-            margin-top: 20px;
+            margin-top: 25px;
+            display: inline-block;
             font-size: 1rem;
             text-decoration: none;
             color: #3cc03c;
             transition: color 0.3s ease;
-            display: inline-block;
         }
 
         .back-link:hover {
-            color: #28a028; /* Hover más oscuro */
+            color: #28a028;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 0.9rem;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Reservar Espacio</h1>
-        <p class="info">Espacio seleccionado: <strong>{{ espacio.nombre }}</strong></p>
-        <form method="post">
+        <p>Espacio seleccionado: <strong>{{ espacio.nombre }}</strong></p>
+        <div id="calendario"></div>
+
+        <form method="post" id="reserva-form">
             {% csrf_token %}
-            {{ form.as_p }}
+            <!-- Campo oculto para enviar la fecha seleccionada -->
+            <input type="hidden" id="fecha" name="fecha">
+            
+            <div class="form-group">
+                <label for="hora-reserva">Selecciona una franja horaria</label>
+                <select id="hora-reserva" name="hora_reserva" required disabled>
+                    <option value="" selected>Seleccione una franja horaria</option>
+                </select>
+            </div>
+
             <button type="submit">Confirmar Reserva</button>
         </form>
+
         <a href="{% url 'perfil_usuario' %}" class="back-link">Volver al Perfil</a>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const calendarioDiv = document.getElementById("calendario");
+            const horaReservaSelect = document.getElementById("hora-reserva");
+            const fechaInput = document.getElementById("fecha"); // Campo oculto para enviar la fecha seleccionada
+
+            flatpickr(calendarioDiv, {
+                inline: true,
+                dateFormat: "Y-m-d",
+                onChange: function (selectedDates, dateStr) {
+                    fechaInput.value = dateStr; // Actualiza el campo oculto con la fecha seleccionada
+                    cargarHorasDisponibles(dateStr);
+                },
+            });
+
+            function cargarHorasDisponibles(fechaSeleccionada) {
+                const espacioId = "{{ espacio.id }}";
+
+                fetch(`/reservas/horas-disponibles/${espacioId}/${fechaSeleccionada}/`)
+                    .then((response) => {
+                        if (!response.ok) {
+                            throw new Error("Error al obtener las franjas disponibles.");
+                        }
+                        return response.json();
+                    })
+                    .then((data) => {
+                        if (data.horas_disponibles) {
+                            const opciones = data.horas_disponibles
+                                .map(
+                                    ([inicio, fin]) =>
+                                        `<option value="${inicio}-${fin}">${inicio} - ${fin}</option>`
+                                )
+                                .join("");
+                            horaReservaSelect.innerHTML = opciones;
+                            horaReservaSelect.disabled = false;
+                        } else {
+                            horaReservaSelect.innerHTML = `<option value="">No hay horas disponibles</option>`;
+                            horaReservaSelect.disabled = true;
+                        }
+                    })
+                    .catch((error) => {
+                        console.error("Error:", error);
+                        alert("No se pudieron cargar las franjas horarias. Inténtalo más tarde.");
+                    });
+            }
+        });
+    </script>
 </body>
 </html>
