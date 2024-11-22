@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reservar Espacio</title>
+    <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -13,9 +14,9 @@
 
         body {
             font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #9be79b, #3cc03c); /* Fondo verde suave */
-            color: #004d00; /* Texto en verde oscuro */
-            height: 100vh;
+            background: linear-gradient(135deg, #9be79b, #3cc03c);
+            color: #004d00;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -23,7 +24,7 @@
         }
 
         .container {
-            background: #e6ffe6; /* Fondo verde claro */
+            background: #e6ffe6;
             border: 2px solid #3cc03c;
             padding: 30px 40px;
             border-radius: 12px;
@@ -31,83 +32,214 @@
             max-width: 500px;
             width: 100%;
             text-align: center;
-        }
-
-        h1 {
-            font-size: 2rem;
-            margin-bottom: 20px;
-            color: #004d00; /* Verde oscuro */
-        }
-
-        p.info {
-            font-size: 1.2rem;
-            margin-bottom: 20px;
-        }
-
-        form {
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
-        form label {
-            font-size: 1rem;
-            margin-bottom: 5px;
-            width: 100%;
-            text-align: left;
-            font-weight: bold;
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
         }
 
-        form input {
+        p {
+            margin-bottom: 20px;
+        }
+
+        #calendario {
+            margin: 0px 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        .form-group {
+            margin-top: 30px;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        label {
+            font-size: 1rem;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        select {
             width: 100%;
             padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 6px;
-            border: 1px solid #3cc03c; /* Borde verde */
             font-size: 1rem;
-            background: #f0fff0; /* Fondo de los campos */
+            border: 1px solid #3cc03c;
+            border-radius: 6px;
+            background: #f0fff0;
         }
 
-        form button {
-            padding: 10px 20px;
+        button {
+            padding: 12px 25px;
             border: none;
             border-radius: 6px;
             font-size: 1.2rem;
             color: white;
-            background: #3cc03c; /* Botón verde brillante */
+            background: #3cc03c;
             cursor: pointer;
             transition: background 0.3s ease, transform 0.2s ease;
+            margin-top: 20px;
         }
 
-        form button:hover {
-            background: #28a028; /* Hover verde más oscuro */
+        button:hover {
+            background: #28a028;
             transform: translateY(-3px);
         }
 
         .back-link {
-            margin-top: 20px;
+            margin-top: 25px;
+            display: inline-block;
             font-size: 1rem;
             text-decoration: none;
             color: #3cc03c;
             transition: color 0.3s ease;
-            display: inline-block;
         }
 
         .back-link:hover {
-            color: #28a028; /* Hover más oscuro */
+            color: #28a028;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 0.9rem;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Reservar Espacio</h1>
-        <p class="info">Espacio seleccionado: <strong>{{ espacio.nombre }}</strong></p>
-        <form method="post">
+        <p>Espacio seleccionado: <strong>{{ espacio.nombre }}</strong></p>
+        <div id="calendario"></div>
+
+        <form method="post" id="reserva-form">
             {% csrf_token %}
-            {{ form.as_p }}
+            <!-- Campo oculto para enviar la fecha seleccionada -->
+            <input type="hidden" id="fecha" name="fecha">
+
+            <div class="form-group">
+                <label for="hora-inicio">Selecciona la hora de inicio</label>
+                <select id="hora-inicio" name="hora_inicio" required disabled>
+                    <option value="" selected>Seleccione una hora inicial</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="hora-fin">Selecciona la hora de fin</label>
+                <select id="hora-fin" name="hora_fin" required disabled>
+                    <option value="" selected>Seleccione una hora final</option>
+                </select>
+            </div>
+
             <button type="submit">Confirmar Reserva</button>
         </form>
+
         <a href="{% url 'perfil_usuario' %}" class="back-link">Volver al Perfil</a>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+    const calendarioDiv = document.getElementById("calendario");
+    const horaInicioSelect = document.getElementById("hora-inicio");
+    const horaFinSelect = document.getElementById("hora-fin");
+    const fechaInput = document.getElementById("fecha");
+
+    // Cargar días no disponibles
+    fetch(`/reservas/dias-no-disponibles/{{ espacio.id }}/`)
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error("Error al obtener los días no disponibles.");
+            }
+            return response.json();
+        })
+        .then((data) => {
+            const diasNoDisponibles = data.dias_no_disponibles || [];
+            configurarCalendario(diasNoDisponibles);
+        })
+        .catch((error) => {
+            console.error("Error cargando días no disponibles:", error);
+        });
+
+    function configurarCalendario(diasNoDisponibles) {
+        flatpickr(calendarioDiv, {
+            inline: true,
+            dateFormat: "Y-m-d",
+            minDate: "today",
+            disable: diasNoDisponibles,
+            onChange: function (selectedDates, dateStr) {
+                fechaInput.value = dateStr; // Actualizar fecha seleccionada
+                cargarHorasDisponibles(dateStr);
+            },
+        });
+    }
+
+    function cargarHorasDisponibles(fechaSeleccionada) {
+        const espacioId = "{{ espacio.id }}";
+
+        fetch(`/reservas/horas-disponibles/${espacioId}/${fechaSeleccionada}/`)
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error("Error al obtener las horas disponibles.");
+                }
+                return response.json();
+            })
+            .then((data) => {
+                if (data.horas_disponibles) {
+                    horaInicioSelect.innerHTML = `<option value="">Seleccione hora de inicio</option>`;
+                    horaFinSelect.innerHTML = `<option value="">Seleccione hora de fin</option>`;
+                    horaFinSelect.disabled = true;
+
+                    // Llenar el select de horas de inicio
+                    Object.keys(data.horas_disponibles).forEach((horaInicio) => {
+                        const option = document.createElement("option");
+                        option.value = horaInicio;
+                        option.textContent = horaInicio;
+                        horaInicioSelect.appendChild(option);
+                    });
+
+                    horaInicioSelect.disabled = false;
+                }
+            })
+            .catch((error) => {
+                console.error("Error:", error);
+                alert("No se pudieron cargar las horas disponibles. Inténtalo más tarde.");
+            });
+    }
+
+    horaInicioSelect.addEventListener("change", function () {
+        const horaSeleccionada = horaInicioSelect.value;
+        const espacioId = "{{ espacio.id }}";
+        const fechaSeleccionada = fechaInput.value;
+
+        if (horaSeleccionada && fechaSeleccionada) {
+            fetch(`/reservas/horas-disponibles/${espacioId}/${fechaSeleccionada}/`)
+                .then((response) => response.json())
+                .then((data) => {
+                    const horasFinales = data.horas_disponibles[horaSeleccionada] || [];
+                    horaFinSelect.innerHTML = `<option value="">Seleccione hora de fin</option>`;
+
+                    horasFinales.forEach((horaFin) => {
+                        const option = document.createElement("option");
+                        option.value = horaFin;
+                        option.textContent = horaFin;
+                        horaFinSelect.appendChild(option);
+                    });
+
+                    horaFinSelect.disabled = horasFinales.length === 0;
+                })
+                .catch((error) => console.error("Error al cargar horas finales:", error));
+        }
+    });
+});
+
+    </script>
+    
 </body>
 </html>

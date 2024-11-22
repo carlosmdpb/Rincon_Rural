@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout
 from django.contrib.auth.views import LoginView
@@ -7,6 +8,7 @@ from reservas.forms import ReservaForm
 from reservas.models import Reserva
 from .forms import RegistroForm
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 
 # Vista para el registro de usuarios
 def registro(request):
@@ -40,15 +42,28 @@ def reservar_espacio(request, espacio_id):
     espacio = get_object_or_404(Espacio, id=espacio_id)
 
     if request.method == 'POST':
-        form = ReservaForm(request.POST, espacio=espacio)
-        if form.is_valid():
-            reserva = form.save(commit=False)
-            reserva.espacio = espacio
-            reserva.usuario = request.user
-            reserva.save()
-            messages.success(request, "¡Reserva creada con éxito!")
-            return redirect('perfil_usuario')
-    else:
-        form = ReservaForm(espacio=espacio)
+        fecha = request.POST.get('fecha')
+        hora_inicio = request.POST.get('hora_inicio')
+        hora_fin = request.POST.get('hora_fin')
 
-    return render(request, 'usuarios/reservar_espacio.html', {'form': form, 'espacio': espacio})
+        if fecha and hora_inicio and hora_fin:
+            try:
+                fecha_inicio = datetime.strptime(f"{fecha} {hora_inicio}", "%Y-%m-%d %H:%M")
+                fecha_fin = datetime.strptime(f"{fecha} {hora_fin}", "%Y-%m-%d %H:%M")
+
+                # Crear la reserva
+                reserva = Reserva(
+                    usuario=request.user,
+                    espacio=espacio,
+                    fecha_inicio=fecha_inicio,
+                    fecha_fin=fecha_fin,
+                )
+                reserva.save()
+                messages.success(request, "Reserva creada exitosamente.")
+                return redirect('perfil_usuario')
+            except Exception as e:
+                messages.error(request, f"Error al procesar la reserva: {str(e)}")
+        else:
+            messages.error(request, "Por favor, selecciona una fecha y una franja horaria.")
+
+    return render(request, 'usuarios/reservar_espacio.html', {'espacio': espacio})
