@@ -147,3 +147,28 @@ def dias_no_disponibles(request, espacio_id):
         return JsonResponse({"error": "Espacio no encontrado"}, status=404)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
+
+def cancelar_reserva(request, reserva_id):
+    reserva = get_object_or_404(Reserva, id=reserva_id, usuario=request.user)
+    if request.method == 'POST':
+        reserva.delete()
+        messages.success(request, 'Reserva cancelada con éxito.')
+        return redirect('perfil_usuario')
+    return render(request, 'cancelar_reserva.html', {'reserva': reserva})
+
+
+def editar_reserva(request, reserva_id):
+    reserva = get_object_or_404(Reserva, id=reserva_id)
+
+    if request.method == 'POST':
+        form = ReservaForm(request.POST, instance=reserva)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Reserva actualizada correctamente.")
+            return redirect('perfil_usuario')  # Ajusta el nombre de la URL para tu perfil
+        else:
+            messages.error(request, "Corrige los errores antes de continuar.")
+    else:
+        form = ReservaForm(instance=reserva)
+
+    return render(request, 'editar_reserva.html', {'form': form, 'reserva': reserva})

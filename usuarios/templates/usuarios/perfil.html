@@ -126,6 +126,17 @@
                 <li>
                     <span>{{ reserva.espacio.nombre }}: {{ reserva.fecha_inicio|date:"d/m/Y H:i" }} - {{ reserva.fecha_fin|date:"d/m/Y H:i" }}
                     ({{ reserva.get_estado_display }})</span>
+                    <form action="{% url 'editar_reserva' reserva.id %}" method="get" style="display:inline;">
+                        <button type="submit" style="background-color: #f7d87c; color: black; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">
+                            Editar
+                        </button>
+                    </form>
+                    <form action="{% url 'cancelar_reserva' reserva.id %}" method="post" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" onclick="return confirm('¿Estás seguro de que deseas cancelar esta reserva?');" style="background-color: #f56c79; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">
+                            Cancelar
+                        </button>
+                    </form>
                 </li>
             {% endfor %}
         </ul>
@@ -134,3 +145,5 @@
     </div>
 </body>
 </html>
+
+

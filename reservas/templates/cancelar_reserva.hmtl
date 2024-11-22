@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Cancelar Reserva</h1>
+<p>¿Estás seguro de que deseas cancelar la reserva para <strong>{{ reserva.espacio.nombre }}</strong>?</p>
+<p>Fecha Inicio: {{ reserva.fecha_inicio }}</p>
+<p>Fecha Fin: {{ reserva.fecha_fin }}</p>
+
+<form action="" method="post">
+    {% csrf_token %}
+    <button type="submit">Confirmar Cancelación</button>
+</form>
+<a href="{% url 'perfil_usuario' %}">Volver al Perfil</a>
+{% endblock %}

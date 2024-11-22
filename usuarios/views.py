@@ -67,3 +67,6 @@ def reservar_espacio(request, espacio_id):
             messages.error(request, "Por favor, selecciona una fecha y una franja horaria.")
 
     return render(request, 'usuarios/reservar_espacio.html', {'espacio': espacio})
+
+
+
