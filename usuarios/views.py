@@ -15,11 +15,14 @@ def registro(request):
     if request.method == 'POST':
         form = RegistroForm(request.POST)
         if form.is_valid():
-            usuario = form.save()
-            login(request, usuario)
-            return redirect('login')  # Redirige al inicio después del registro
+            usuario = form.save(commit=False)
+            usuario.is_active = False  # Usuario inactivo hasta que sea aprobado
+            usuario.save()
+            messages.success(request, "El administrador tiene que aprobar tu solicitud de registro. Manténgase a la espera. Gracias por su paciencia.")
+            return redirect('login')
     else:
         form = RegistroForm()
+
     return render(request, 'usuarios/registro.html', {'form': form})
 
 # Vista genérica para el inicio de sesión
