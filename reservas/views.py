@@ -102,7 +102,8 @@ def dias_no_disponibles(request, espacio_id):
     try:
         espacio = get_object_or_404(Espacio, id=espacio_id)
         tz = get_current_timezone()
-        fecha_actual = now().date()
+        fecha_actual = now().astimezone(tz).date()
+        hora_actual = now().astimezone(tz).time()
         dias_no_disponibles = []
 
         # Analizar los próximos 30 días
@@ -112,13 +113,14 @@ def dias_no_disponibles(request, espacio_id):
             fecha_fin_dia = make_aware(datetime.combine(fecha, datetime.max.time()), tz)
 
             # Generar todas las horas posibles del día
-            hora_actual = make_aware(datetime.combine(fecha, espacio.hora_apertura), tz)
+            hora_actual_dia = make_aware(datetime.combine(fecha, espacio.hora_apertura), tz)
             hora_cierre = make_aware(datetime.combine(fecha, espacio.hora_cierre), tz)
             horas_disponibles = []
 
-            while hora_actual < hora_cierre:
-                horas_disponibles.append(hora_actual.strftime("%H:%M"))
-                hora_actual += timedelta(hours=1)
+            while hora_actual_dia < hora_cierre:
+                if fecha > fecha_actual or hora_actual_dia.time() > hora_actual:
+                    horas_disponibles.append(hora_actual_dia.strftime("%H:%M"))
+                hora_actual_dia += timedelta(hours=1)
 
             # Excluir horas ocupadas
             reservas = Reserva.objects.filter(
