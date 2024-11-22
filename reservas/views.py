@@ -32,49 +32,52 @@ def horas_disponibles(request, espacio_id, fecha):
         # Obtener el espacio y la zona horaria actual
         espacio = get_object_or_404(Espacio, id=espacio_id)
         tz = get_current_timezone()
+        ahora = now().astimezone(tz)  # Fecha y hora actuales con zona horaria
 
-        # Convertir la fecha seleccionada a timezone-aware
-        fecha_inicio_dia = make_aware(datetime.strptime(fecha, "%Y-%m-%d"), tz)
-        fecha_fin_dia = fecha_inicio_dia + timedelta(days=1)
+        # Convertir la fecha seleccionada a datetime.date
+        fecha_seleccionada = datetime.strptime(fecha, "%Y-%m-%d").date()
 
-        # Generar todas las horas dentro del horario del espacio
-        hora_actual = datetime.combine(fecha_inicio_dia.date(), espacio.hora_apertura)
-        hora_cierre = datetime.combine(fecha_inicio_dia.date(), espacio.hora_cierre)
+        # Horario del espacio para la fecha seleccionada
+        fecha_inicio_dia = make_aware(datetime.combine(fecha_seleccionada, espacio.hora_apertura), tz)
+        fecha_fin_dia = make_aware(datetime.combine(fecha_seleccionada, espacio.hora_cierre), tz)
 
         horas_disponibles_inicio = []
-        horas_disponibles_final = []
+        horas_disponibles_fin = []
 
-        while hora_actual < hora_cierre:
+        # Generar horas disponibles
+        hora_actual = fecha_inicio_dia
+        while hora_actual < fecha_fin_dia:
             siguiente_hora = hora_actual + timedelta(hours=1)
-            horas_disponibles_inicio.append(hora_actual.strftime("%H:%M"))
-            horas_disponibles_final.append(siguiente_hora.strftime("%H:%M"))
+
+            # Si es el día de hoy, excluir horas pasadas
+            if fecha_seleccionada > ahora.date() or hora_actual >= ahora:
+                horas_disponibles_inicio.append(hora_actual.strftime("%H:%M"))
+                horas_disponibles_fin.append(siguiente_hora.strftime("%H:%M"))
+
             hora_actual = siguiente_hora
 
         # Obtener las reservas existentes para el espacio en la fecha seleccionada
         reservas = Reserva.objects.filter(
             espacio=espacio,
-            fecha_inicio__gte=fecha_inicio_dia,
-            fecha_inicio__lt=fecha_fin_dia,
+            fecha_inicio__date=fecha_seleccionada
         )
 
         # Ajustar las horas de inicio para evitar conflictos
         for reserva in reservas:
-            hora_inicio_reserva = reserva.fecha_inicio.astimezone(tz).time()
-            hora_fin_reserva = reserva.fecha_fin.astimezone(tz).time()
+            reserva_inicio = reserva.fecha_inicio.astimezone(tz).time()
+            reserva_fin = reserva.fecha_fin.astimezone(tz).time()
 
             # Eliminar horas de inicio que caigan dentro de una reserva activa
             horas_disponibles_inicio = [
                 hora for hora in horas_disponibles_inicio
-                if not (
-                    hora_inicio_reserva.strftime("%H:%M") <= hora < hora_fin_reserva.strftime("%H:%M")
-                )
+                if not (reserva_inicio.strftime("%H:%M") <= hora < reserva_fin.strftime("%H:%M"))
             ]
 
         # Ajustar las horas de fin dinámicamente según la hora de inicio seleccionada
         horas_disponibles_dict = {}
         for inicio in horas_disponibles_inicio:
             horas_finales_validas = []
-            for fin in horas_disponibles_final:
+            for fin in horas_disponibles_fin:
                 if fin > inicio:
                     # Comprobar conflictos con reservas activas
                     conflicto = any(
@@ -88,6 +91,55 @@ def horas_disponibles(request, espacio_id, fecha):
             horas_disponibles_dict[inicio] = horas_finales_validas
 
         return JsonResponse({"horas_disponibles": horas_disponibles_dict})
+
+    except Espacio.DoesNotExist:
+        return JsonResponse({"error": "Espacio no encontrado"}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
+
+    
+def dias_no_disponibles(request, espacio_id):
+    try:
+        espacio = get_object_or_404(Espacio, id=espacio_id)
+        tz = get_current_timezone()
+        fecha_actual = now().date()
+        dias_no_disponibles = []
+
+        # Analizar los próximos 30 días
+        for i in range(30):  # Por ejemplo, 30 días futuros
+            fecha = fecha_actual + timedelta(days=i)
+            fecha_inicio_dia = make_aware(datetime.combine(fecha, datetime.min.time()), tz)
+            fecha_fin_dia = make_aware(datetime.combine(fecha, datetime.max.time()), tz)
+
+            # Generar todas las horas posibles del día
+            hora_actual = make_aware(datetime.combine(fecha, espacio.hora_apertura), tz)
+            hora_cierre = make_aware(datetime.combine(fecha, espacio.hora_cierre), tz)
+            horas_disponibles = []
+
+            while hora_actual < hora_cierre:
+                horas_disponibles.append(hora_actual.strftime("%H:%M"))
+                hora_actual += timedelta(hours=1)
+
+            # Excluir horas ocupadas
+            reservas = Reserva.objects.filter(
+                espacio=espacio,
+                fecha_inicio__gte=fecha_inicio_dia,
+                fecha_inicio__lt=fecha_fin_dia,
+            )
+            for reserva in reservas:
+                hora_inicio_reserva = reserva.fecha_inicio.astimezone(tz).time()
+                hora_fin_reserva = reserva.fecha_fin.astimezone(tz).time()
+                horas_disponibles = [
+                    hora
+                    for hora in horas_disponibles
+                    if not (hora_inicio_reserva <= datetime.strptime(hora, "%H:%M").time() < hora_fin_reserva)
+                ]
+
+            # Si no hay horas disponibles, deshabilitar el día
+            if not horas_disponibles:
+                dias_no_disponibles.append(fecha.strftime("%Y-%m-%d"))
+
+        return JsonResponse({"dias_no_disponibles": dias_no_disponibles})
 
     except Espacio.DoesNotExist:
         return JsonResponse({"error": "Espacio no encontrado"}, status=404)

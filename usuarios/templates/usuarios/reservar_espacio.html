@@ -146,81 +146,100 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const calendarioDiv = document.getElementById("calendario");
-            const horaInicioSelect = document.getElementById("hora-inicio");
-            const horaFinSelect = document.getElementById("hora-fin");
-            const fechaInput = document.getElementById("fecha");
+    const calendarioDiv = document.getElementById("calendario");
+    const horaInicioSelect = document.getElementById("hora-inicio");
+    const horaFinSelect = document.getElementById("hora-fin");
+    const fechaInput = document.getElementById("fecha");
 
-            // Configuración del calendario
-            flatpickr(calendarioDiv, {
-                inline: true,
-                dateFormat: "Y-m-d",
-                minDate: "today", // Restringe días pasados
-                onChange: function (selectedDates, dateStr) {
-                    fechaInput.value = dateStr;
-                    cargarHorasDisponibles(dateStr);
-                },
-            });
-
-            function cargarHorasDisponibles(fechaSeleccionada) {
-                const espacioId = "{{ espacio.id }}";
-
-                fetch(`/reservas/horas-disponibles/${espacioId}/${fechaSeleccionada}/`)
-                    .then((response) => {
-                        if (!response.ok) {
-                            throw new Error("Error al obtener las horas disponibles.");
-                        }
-                        return response.json();
-                    })
-                    .then((data) => {
-                        if (data.horas_disponibles) {
-                            // Limpiar selects
-                            horaInicioSelect.innerHTML = `<option value="">Seleccione hora de inicio</option>`;
-                            horaFinSelect.innerHTML = `<option value="">Seleccione hora de fin</option>`;
-                            horaFinSelect.disabled = true;
-
-                            // Llenar el select de horas de inicio
-                            Object.keys(data.horas_disponibles).forEach((horaInicio) => {
-                                const option = document.createElement("option");
-                                option.value = horaInicio;
-                                option.textContent = horaInicio;
-                                horaInicioSelect.appendChild(option);
-                            });
-
-                            horaInicioSelect.disabled = false;
-                        }
-                    })
-                    .catch((error) => {
-                        console.error("Error:", error);
-                        alert("No se pudieron cargar las horas disponibles. Inténtalo más tarde.");
-                    });
+    // Cargar días no disponibles
+    fetch(`/reservas/dias-no-disponibles/{{ espacio.id }}/`)
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error("Error al obtener los días no disponibles.");
             }
-
-            horaInicioSelect.addEventListener("change", function () {
-                const horaSeleccionada = horaInicioSelect.value;
-                const espacioId = "{{ espacio.id }}";
-                const fechaSeleccionada = fechaInput.value;
-
-                if (horaSeleccionada && fechaSeleccionada) {
-                    fetch(`/reservas/horas-disponibles/${espacioId}/${fechaSeleccionada}/`)
-                        .then((response) => response.json())
-                        .then((data) => {
-                            const horasFinales = data.horas_disponibles[horaSeleccionada] || [];
-                            horaFinSelect.innerHTML = `<option value="">Seleccione hora de fin</option>`;
-
-                            horasFinales.forEach((horaFin) => {
-                                const option = document.createElement("option");
-                                option.value = horaFin;
-                                option.textContent = horaFin;
-                                horaFinSelect.appendChild(option);
-                            });
-
-                            horaFinSelect.disabled = horasFinales.length === 0;
-                        })
-                        .catch((error) => console.error("Error al cargar horas finales:", error));
-                }
-            });
+            return response.json();
+        })
+        .then((data) => {
+            const diasNoDisponibles = data.dias_no_disponibles || [];
+            configurarCalendario(diasNoDisponibles);
+        })
+        .catch((error) => {
+            console.error("Error cargando días no disponibles:", error);
         });
+
+    function configurarCalendario(diasNoDisponibles) {
+        flatpickr(calendarioDiv, {
+            inline: true,
+            dateFormat: "Y-m-d",
+            minDate: "today",
+            disable: diasNoDisponibles,
+            onChange: function (selectedDates, dateStr) {
+                fechaInput.value = dateStr; // Actualizar fecha seleccionada
+                cargarHorasDisponibles(dateStr);
+            },
+        });
+    }
+
+    function cargarHorasDisponibles(fechaSeleccionada) {
+        const espacioId = "{{ espacio.id }}";
+
+        fetch(`/reservas/horas-disponibles/${espacioId}/${fechaSeleccionada}/`)
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error("Error al obtener las horas disponibles.");
+                }
+                return response.json();
+            })
+            .then((data) => {
+                if (data.horas_disponibles) {
+                    horaInicioSelect.innerHTML = `<option value="">Seleccione hora de inicio</option>`;
+                    horaFinSelect.innerHTML = `<option value="">Seleccione hora de fin</option>`;
+                    horaFinSelect.disabled = true;
+
+                    // Llenar el select de horas de inicio
+                    Object.keys(data.horas_disponibles).forEach((horaInicio) => {
+                        const option = document.createElement("option");
+                        option.value = horaInicio;
+                        option.textContent = horaInicio;
+                        horaInicioSelect.appendChild(option);
+                    });
+
+                    horaInicioSelect.disabled = false;
+                }
+            })
+            .catch((error) => {
+                console.error("Error:", error);
+                alert("No se pudieron cargar las horas disponibles. Inténtalo más tarde.");
+            });
+    }
+
+    horaInicioSelect.addEventListener("change", function () {
+        const horaSeleccionada = horaInicioSelect.value;
+        const espacioId = "{{ espacio.id }}";
+        const fechaSeleccionada = fechaInput.value;
+
+        if (horaSeleccionada && fechaSeleccionada) {
+            fetch(`/reservas/horas-disponibles/${espacioId}/${fechaSeleccionada}/`)
+                .then((response) => response.json())
+                .then((data) => {
+                    const horasFinales = data.horas_disponibles[horaSeleccionada] || [];
+                    horaFinSelect.innerHTML = `<option value="">Seleccione hora de fin</option>`;
+
+                    horasFinales.forEach((horaFin) => {
+                        const option = document.createElement("option");
+                        option.value = horaFin;
+                        option.textContent = horaFin;
+                        horaFinSelect.appendChild(option);
+                    });
+
+                    horaFinSelect.disabled = horasFinales.length === 0;
+                })
+                .catch((error) => console.error("Error al cargar horas finales:", error));
+        }
+    });
+});
+
     </script>
+    
 </body>
 </html>
