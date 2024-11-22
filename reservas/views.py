@@ -4,8 +4,7 @@ from .models import Reserva, Espacio
 from .forms import ReservaForm
 from django.contrib import messages
 from django.http import JsonResponse
-from django.utils.timezone import make_aware
-from django.utils.timezone import make_aware, get_current_timezone
+from django.utils.timezone import make_aware, get_current_timezone, now
 
 def crear_reserva(request):
     if request.method == 'POST':
@@ -33,25 +32,30 @@ def horas_disponibles(request, espacio_id, fecha):
         # Obtener el espacio y la zona horaria actual
         espacio = get_object_or_404(Espacio, id=espacio_id)
         tz = get_current_timezone()
+        fecha_actual = now().astimezone(tz)
 
         # Convertir la fecha seleccionada a timezone-aware
         fecha_inicio_dia = make_aware(datetime.strptime(fecha, "%Y-%m-%d"), tz)
         fecha_fin_dia = fecha_inicio_dia + timedelta(days=1)
 
-        # Generar todas las parejas de horas dentro del horario del espacio
+        # Generar todas las horas disponibles dentro del horario del espacio
         hora_actual = make_aware(datetime.combine(fecha_inicio_dia.date(), espacio.hora_apertura), tz)
         hora_cierre = make_aware(datetime.combine(fecha_inicio_dia.date(), espacio.hora_cierre), tz)
-        parejas_horas = []
+        horas_inicio = []
+        horas_fin = []
 
-        while hora_actual + timedelta(hours=1) <= hora_cierre:
-            pareja = (
-                hora_actual.strftime("%H:%M"),
-                (hora_actual + timedelta(hours=1)).strftime("%H:%M"),
-            )
-            parejas_horas.append(pareja)
+        while hora_actual < hora_cierre:
+            if hora_actual > fecha_actual:
+                horas_inicio.append(hora_actual.strftime("%H:%M"))
             hora_actual += timedelta(hours=1)
 
-        # Excluir parejas que interfieran con reservas existentes
+        hora_actual = make_aware(datetime.combine(fecha_inicio_dia.date(), espacio.hora_apertura), tz)
+        while hora_actual <= hora_cierre:
+            if hora_actual > fecha_actual:
+                horas_fin.append(hora_actual.strftime("%H:%M"))
+            hora_actual += timedelta(hours=1)
+
+        # Excluir horas que interfieran con reservas existentes
         reservas = Reserva.objects.filter(
             espacio=espacio,
             fecha_inicio__gte=fecha_inicio_dia,
@@ -61,20 +65,18 @@ def horas_disponibles(request, espacio_id, fecha):
         for reserva in reservas:
             hora_inicio_reserva = reserva.fecha_inicio.astimezone(tz).time()
             hora_fin_reserva = reserva.fecha_fin.astimezone(tz).time()
-            parejas_horas = [
-                pareja
-                for pareja in parejas_horas
-                if not (
-                    hora_inicio_reserva <= datetime.strptime(pareja[0], "%H:%M").time() < hora_fin_reserva
-                    or hora_inicio_reserva < datetime.strptime(pareja[1], "%H:%M").time() <= hora_fin_reserva
-                )
+            horas_inicio = [
+                hora for hora in horas_inicio
+                if datetime.strptime(hora, "%H:%M").time() >= hora_fin_reserva or datetime.strptime(hora, "%H:%M").time() < hora_inicio_reserva
+            ]
+            horas_fin = [
+                hora for hora in horas_fin
+                if datetime.strptime(hora, "%H:%M").time() > hora_inicio_reserva
             ]
 
-        return JsonResponse({"horas_disponibles": parejas_horas})
+        return JsonResponse({"horas_inicio": horas_inicio, "horas_fin": horas_fin})
 
     except Espacio.DoesNotExist:
         return JsonResponse({"error": "Espacio no encontrado"}, status=404)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
-
-

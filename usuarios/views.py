@@ -43,11 +43,11 @@ def reservar_espacio(request, espacio_id):
 
     if request.method == 'POST':
         fecha = request.POST.get('fecha')
-        hora_reserva = request.POST.get('hora_reserva')
+        hora_inicio = request.POST.get('hora_inicio')
+        hora_fin = request.POST.get('hora_fin')
 
-        if fecha and hora_reserva:
+        if fecha and hora_inicio and hora_fin:
             try:
-                hora_inicio, hora_fin = hora_reserva.split('-')
                 fecha_inicio = datetime.strptime(f"{fecha} {hora_inicio}", "%Y-%m-%d %H:%M")
                 fecha_fin = datetime.strptime(f"{fecha} {hora_fin}", "%Y-%m-%d %H:%M")
 
@@ -67,4 +67,3 @@ def reservar_espacio(request, espacio_id):
             messages.error(request, "Por favor, selecciona una fecha y una franja horaria.")
 
     return render(request, 'usuarios/reservar_espacio.html', {'espacio': espacio})
-

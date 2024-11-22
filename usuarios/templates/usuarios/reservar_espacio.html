@@ -34,7 +34,7 @@
             text-align: center;
             display: flex;
             flex-direction: column;
-            align-items: center; /* Centra los elementos horizontalmente */
+            align-items: center;
         }
 
         h1 {
@@ -47,16 +47,16 @@
         }
 
         #calendario {
-            margin: 20px 0; /* Ajusta espacio arriba y abajo */
-            width: 100%; /* Ajusta al contenedor */
+            margin: 20px 0;
+            width: 100%;
             display: flex;
-            justify-content: center; /* Centra internamente */
+            justify-content: center;
         }
 
         .form-group {
-            margin-top: 30px; /* Espaciado grande entre el calendario y el selector */
+            margin-top: 30px;
             margin-bottom: 20px;
-            width: 100%; /* Asegura que el selector de horas tome todo el ancho */
+            width: 100%;
         }
 
         label {
@@ -122,11 +122,18 @@
             {% csrf_token %}
             <!-- Campo oculto para enviar la fecha seleccionada -->
             <input type="hidden" id="fecha" name="fecha">
-            
+
             <div class="form-group">
-                <label for="hora-reserva">Selecciona una franja horaria</label>
-                <select id="hora-reserva" name="hora_reserva" required disabled>
-                    <option value="" selected>Seleccione una franja horaria</option>
+                <label for="hora-inicio">Selecciona la hora de inicio</label>
+                <select id="hora-inicio" name="hora_inicio" required disabled>
+                    <option value="" selected>Seleccione una hora inicial</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="hora-fin">Selecciona la hora de fin</label>
+                <select id="hora-fin" name="hora_fin" required disabled>
+                    <option value="" selected>Seleccione una hora final</option>
                 </select>
             </div>
 
@@ -140,41 +147,53 @@
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const calendarioDiv = document.getElementById("calendario");
-            const horaReservaSelect = document.getElementById("hora-reserva");
-            const fechaInput = document.getElementById("fecha"); // Campo oculto para enviar la fecha seleccionada
-
+            const horaInicioSelect = document.getElementById("hora-inicio");
+            const horaFinSelect = document.getElementById("hora-fin");
+            const fechaActual = new Date();
+    
             flatpickr(calendarioDiv, {
                 inline: true,
                 dateFormat: "Y-m-d",
+                minDate: fechaActual, // No permite fechas pasadas
                 onChange: function (selectedDates, dateStr) {
-                    fechaInput.value = dateStr; // Actualiza el campo oculto con la fecha seleccionada
                     cargarHorasDisponibles(dateStr);
                 },
             });
-
+    
             function cargarHorasDisponibles(fechaSeleccionada) {
                 const espacioId = "{{ espacio.id }}";
-
+    
                 fetch(`/reservas/horas-disponibles/${espacioId}/${fechaSeleccionada}/`)
                     .then((response) => {
                         if (!response.ok) {
-                            throw new Error("Error al obtener las franjas disponibles.");
+                            throw new Error("Error al obtener las horas disponibles.");
                         }
                         return response.json();
                     })
                     .then((data) => {
-                        if (data.horas_disponibles) {
-                            const opciones = data.horas_disponibles
-                                .map(
-                                    ([inicio, fin]) =>
-                                        `<option value="${inicio}-${fin}">${inicio} - ${fin}</option>`
-                                )
+                        if (data.horas_inicio && data.horas_fin) {
+                            horaInicioSelect.innerHTML = data.horas_inicio
+                                .map((hora) => `<option value="${hora}">${hora}</option>`)
                                 .join("");
-                            horaReservaSelect.innerHTML = opciones;
-                            horaReservaSelect.disabled = false;
+                            horaInicioSelect.disabled = false;
+    
+                            horaFinSelect.innerHTML = `<option value="" selected>Seleccione una hora</option>`;
+                            horaFinSelect.disabled = true;
+    
+                            horaInicioSelect.addEventListener("change", function () {
+                                const horaInicioSeleccionada = horaInicioSelect.value;
+                                const opciones = data.horas_fin
+                                    .filter((hora) => hora > horaInicioSeleccionada)
+                                    .map((hora) => `<option value="${hora}">${hora}</option>`)
+                                    .join("");
+                                horaFinSelect.innerHTML = opciones;
+                                horaFinSelect.disabled = false;
+                            });
                         } else {
-                            horaReservaSelect.innerHTML = `<option value="">No hay horas disponibles</option>`;
-                            horaReservaSelect.disabled = true;
+                            horaInicioSelect.innerHTML = `<option value="">No hay horas disponibles</option>`;
+                            horaInicioSelect.disabled = true;
+                            horaFinSelect.innerHTML = `<option value="">Seleccione una hora</option>`;
+                            horaFinSelect.disabled = true;
                         }
                     })
                     .catch((error) => {
@@ -183,6 +202,6 @@
                     });
             }
         });
-    </script>
+    </script>    
 </body>
 </html>

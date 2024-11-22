@@ -1,6 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from .models import Reserva
+from django.utils.timezone import now
 
 class ReservaForm(forms.ModelForm):
     fecha_inicio = forms.DateTimeField(
@@ -24,6 +25,7 @@ class ReservaForm(forms.ModelForm):
         cleaned_data = super().clean()
         fecha_inicio = cleaned_data.get('fecha_inicio')
         fecha_fin = cleaned_data.get('fecha_fin')
+        now_time = now()
 
         # Validar que las fechas estén presentes
         if not fecha_inicio or not fecha_fin:
@@ -32,6 +34,12 @@ class ReservaForm(forms.ModelForm):
         # Validar que la fecha de inicio sea menor que la fecha de fin
         if fecha_inicio >= fecha_fin:
             raise ValidationError("La fecha de inicio debe ser anterior a la fecha de fin.")
+        
+        if fecha_inicio and fecha_inicio < now_time:
+            raise ValidationError("No puedes reservar en una fecha u hora pasada.")
+
+        if fecha_fin and fecha_fin <= now_time:
+            raise ValidationError("La hora de fin debe estar en el futuro.")
 
         # Validar que el horario esté dentro del rango permitido del espacio
         if self.espacio:
