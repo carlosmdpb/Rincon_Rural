@@ -48,11 +48,17 @@
         form input, form select {
             width: 100%;
             padding: 10px;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             border-radius: 6px;
             border: 1px solid #3cc03c; /* Borde verde */
             font-size: 1rem;
             background: #f0fff0; /* Fondo de los campos */
+        }
+
+        .error-message {
+            color: red;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
         }
 
         form button {
@@ -88,11 +94,100 @@
 <body>
     <div class="container">
         <h1>Registro de Usuario</h1>
+
+        <!-- Mostrar errores generales -->
+        {% if form.non_field_errors %}
+            <div class="error-message">
+                {% for error in form.non_field_errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
         <form method="post">
             {% csrf_token %}
-            {{ form.as_p }}
+
+            <!-- Campo: Username -->
+            <div>
+                {{ form.username.label_tag }}
+                {{ form.username }}
+                {% if form.username.errors %}
+                    <div class="error-message">
+                        {% for error in form.username.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Campo: Email -->
+            <div>
+                {{ form.email.label_tag }}
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <div class="error-message">
+                        {% for error in form.email.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Campo: DNI -->
+            <div>
+                {{ form.dni.label_tag }}
+                {{ form.dni }}
+                {% if form.dni.errors %}
+                    <div class="error-message">
+                        {% for error in form.dni.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Campo: Código Postal -->
+            <div>
+                {{ form.codigo_postal.label_tag }}
+                {{ form.codigo_postal }}
+                {% if form.codigo_postal.errors %}
+                    <div class="error-message">
+                        {% for error in form.codigo_postal.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Campo: Contraseña -->
+            <div>
+                {{ form.password1.label_tag }}
+                {{ form.password1 }}
+                {% if form.password1.errors %}
+                    <div class="error-message">
+                        {% for error in form.password1.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Campo: Confirmación de Contraseña -->
+            <div>
+                {{ form.password2.label_tag }}
+                {{ form.password2 }}
+                {% if form.password2.errors %}
+                    <div class="error-message">
+                        {% for error in form.password2.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
             <button type="submit">Registrarse</button>
         </form>
+
         <a href="{% url 'login' %}" class="login-link">¿Ya tienes cuenta? Inicia sesión aquí</a>
     </div>
 </body>

@@ -18,8 +18,15 @@ def registro(request):
             usuario = form.save(commit=False)
             usuario.is_active = False  # Usuario inactivo hasta que sea aprobado
             usuario.save()
-            messages.success(request, "El administrador tiene que aprobar tu solicitud de registro. Manténgase a la espera. Gracias por su paciencia.")
+            messages.success(
+                request,
+                "El administrador tiene que aprobar tu solicitud de registro. "
+                "Manténgase a la espera. Gracias por su paciencia."
+            )
             return redirect('login')
+        else:
+            # Si el formulario no es válido, muestra los errores
+            messages.error(request, "Por favor, corrige los errores en el formulario.")
     else:
         form = RegistroForm()
 
@@ -38,7 +45,11 @@ def cerrar_sesion(request):
 def perfil_usuario(request):
     espacios = Espacio.objects.filter(disponible=True)  # Espacios disponibles
     reservas = Reserva.objects.filter(usuario=request.user)  # Reservas del usuario actual
-    return render(request, 'usuarios/perfil.html', {'usuario': request.user, 'espacios': espacios, 'reservas': reservas})
+    return render(request, 'usuarios/perfil.html', {
+        'usuario': request.user,
+        'espacios': espacios,
+        'reservas': reservas
+    })
 
 @login_required
 def reservar_espacio(request, espacio_id):
@@ -53,6 +64,11 @@ def reservar_espacio(request, espacio_id):
             try:
                 fecha_inicio = datetime.strptime(f"{fecha} {hora_inicio}", "%Y-%m-%d %H:%M")
                 fecha_fin = datetime.strptime(f"{fecha} {hora_fin}", "%Y-%m-%d %H:%M")
+
+                # Validar que fecha_inicio < fecha_fin
+                if fecha_inicio >= fecha_fin:
+                    messages.error(request, "La hora de inicio debe ser anterior a la hora de fin.")
+                    return render(request, 'usuarios/reservar_espacio.html', {'espacio': espacio})
 
                 # Crear la reserva
                 reserva = Reserva(
@@ -70,6 +86,3 @@ def reservar_espacio(request, espacio_id):
             messages.error(request, "Por favor, selecciona una fecha y una franja horaria.")
 
     return render(request, 'usuarios/reservar_espacio.html', {'espacio': espacio})
-
-
-
