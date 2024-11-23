@@ -9,6 +9,10 @@ from reservas.models import Reserva
 from .forms import RegistroForm
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from django.contrib.messages import get_messages
+from django.contrib.auth import authenticate
+from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import check_password
 
 # Vista para el registro de usuarios
 def registro(request):
@@ -18,6 +22,7 @@ def registro(request):
             usuario = form.save(commit=False)
             usuario.is_active = False  # Usuario inactivo hasta que sea aprobado
             usuario.save()
+            # Agregar el mensaje de éxito y redirigir al login
             messages.success(
                 request,
                 "El administrador tiene que aprobar tu solicitud de registro. "
@@ -30,11 +35,58 @@ def registro(request):
     else:
         form = RegistroForm()
 
+    # Eliminar mensajes residuales al cargar la página
+    storage = get_messages(request)
+    for _ in storage:
+        pass  # Limpia los mensajes de la sesión actual
+
     return render(request, 'usuarios/registro.html', {'form': form})
 
 # Vista genérica para el inicio de sesión
 class LoginUsuario(LoginView):
     template_name = 'usuarios/login.html'
+
+    def form_invalid(self, form):
+        # Evita que Django añada el mensaje por defecto
+        form.errors.clear()
+
+        # Obtener los datos del formulario
+        username = self.request.POST.get('username')
+        password = self.request.POST.get('password')
+
+        # Intentar encontrar al usuario
+        User = get_user_model()
+        try:
+            user = User.objects.get(username=username)
+            if not user.is_active:
+                # Usuario encontrado pero inactivo
+                messages.error(
+                    self.request,
+                    "El administrador tiene que aprobar tu solicitud de registro. "
+                    "Manténgase a la espera. Gracias por su paciencia."
+                )
+            elif not check_password(password, user.password):
+                # Contraseña incorrecta
+                messages.error(
+                    self.request,
+                    "Por favor, introduce una contraseña correcta. "
+                    "Ambos campos pueden distinguir entre mayúsculas y minúsculas."
+                )
+            else:
+                # Si llegamos aquí, algo inesperado falló (este bloque no debería ejecutarse normalmente)
+                messages.error(
+                    self.request,
+                    "Ocurrió un error inesperado. Por favor, inténtalo nuevamente."
+                )
+        except User.DoesNotExist:
+            # Usuario no encontrado
+            messages.error(
+                self.request,
+                "El nombre de usuario o la contraseña son incorrectos."
+            )
+
+        # Retornar el formulario con los mensajes personalizados
+        return self.render_to_response(self.get_context_data(form=form))
 
 # Vista para el cierre de sesión
 def cerrar_sesion(request):
