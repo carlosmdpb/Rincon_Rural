@@ -11,17 +11,23 @@ def crear_reserva(request):
         form = ReservaForm(request.POST)
         if form.is_valid():
             reserva = form.save(commit=False)
-            reserva.usuario = request.user  # Asocia el usuario actual a la reserva
+            reserva.usuario = request.user
+            
+            # Convertir fechas a timezone-aware si son necesarias
+            tz = get_current_timezone()
+            reserva.fecha_inicio = make_aware(reserva.fecha_inicio, tz)
+            reserva.fecha_fin = make_aware(reserva.fecha_fin, tz)
+            
             reserva.save()
             messages.success(request, "Reserva creada exitosamente.")
             return redirect('listar_reservas')
         else:
-            # Mostrar errores de validación
             messages.error(request, "Corrige los errores antes de continuar.")
     else:
         form = ReservaForm()
 
     return render(request, 'crear.html', {'form': form})
+
 
 def listar_reservas(request):
     reservas = Reserva.objects.filter(usuario=request.user)
@@ -157,28 +163,25 @@ def cancelar_reserva(request, reserva_id):
     return render(request, 'cancelar_reserva.html', {'reserva': reserva})
 
 def editar_reserva(request, reserva_id):
-    # Obtener la reserva existente
     reserva = get_object_or_404(Reserva, id=reserva_id)
 
     if request.method == 'POST':
         print(request.POST)  # Depuración: imprime los datos enviados
 
-        # Capturar los datos del formulario manualmente
         fecha = request.POST.get('fecha')
         hora_inicio = request.POST.get('hora_inicio')
         hora_fin = request.POST.get('hora_fin')
 
         try:
-            # Validar que todos los campos necesarios están presentes
             if not all([fecha, hora_inicio, hora_fin]):
                 messages.error(request, "Faltan datos en el formulario.")
                 return redirect('editar_reserva', reserva_id=reserva.id)
 
-            # Convertir los datos en objetos datetime
-            fecha_inicio = datetime.strptime(f"{fecha} {hora_inicio}", "%Y-%m-%d %H:%M")
-            fecha_fin = datetime.strptime(f"{fecha} {hora_fin}", "%Y-%m-%d %H:%M")
+            # Convertir los datos en objetos datetime y hacerlos timezone-aware
+            tz = get_current_timezone()
+            fecha_inicio = make_aware(datetime.strptime(f"{fecha} {hora_inicio}", "%Y-%m-%d %H:%M"), tz)
+            fecha_fin = make_aware(datetime.strptime(f"{fecha} {hora_fin}", "%Y-%m-%d %H:%M"), tz)
 
-            # Actualizar la reserva
             reserva.fecha_inicio = fecha_inicio
             reserva.fecha_fin = fecha_fin
             reserva.save()
@@ -187,13 +190,12 @@ def editar_reserva(request, reserva_id):
             return redirect('perfil_usuario')
 
         except Exception as e:
-            print(f"Error al actualizar la reserva: {e}")  # Imprime el error para depuración
+            print(f"Error al actualizar la reserva: {e}")
             messages.error(request, "Ocurrió un error al actualizar la reserva. Por favor, intenta nuevamente.")
 
-    # Cargar los datos actuales de la reserva en el formulario para el método GET
     return render(request, 'editar_reserva.html', {
         'reserva': reserva,
-        'espacio': reserva.espacio,  # Si necesitas el espacio en la plantilla
+        'espacio': reserva.espacio,
     })
 
 def horas_disponibles_editar(request, espacio_id, fecha, reserva_id):

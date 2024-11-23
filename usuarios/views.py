@@ -13,6 +13,8 @@ from django.contrib.messages import get_messages
 from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
+from django.utils.timezone import make_aware, get_current_timezone
+from datetime import datetime
 
 # Vista para el registro de usuarios
 def registro(request):
@@ -106,6 +108,7 @@ def perfil_usuario(request):
 @login_required
 def reservar_espacio(request, espacio_id):
     espacio = get_object_or_404(Espacio, id=espacio_id)
+    tz = get_current_timezone()  # Obtener la zona horaria actual
 
     if request.method == 'POST':
         fecha = request.POST.get('fecha')
@@ -114,8 +117,9 @@ def reservar_espacio(request, espacio_id):
 
         if fecha and hora_inicio and hora_fin:
             try:
-                fecha_inicio = datetime.strptime(f"{fecha} {hora_inicio}", "%Y-%m-%d %H:%M")
-                fecha_fin = datetime.strptime(f"{fecha} {hora_fin}", "%Y-%m-%d %H:%M")
+                # Combinar fecha y hora y convertirlas en timezone-aware
+                fecha_inicio = make_aware(datetime.strptime(f"{fecha} {hora_inicio}", "%Y-%m-%d %H:%M"), tz)
+                fecha_fin = make_aware(datetime.strptime(f"{fecha} {hora_fin}", "%Y-%m-%d %H:%M"), tz)
 
                 # Validar que fecha_inicio < fecha_fin
                 if fecha_inicio >= fecha_fin:
