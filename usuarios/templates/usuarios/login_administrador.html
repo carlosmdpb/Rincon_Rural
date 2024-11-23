@@ -13,28 +13,30 @@
 
         body {
             font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #9be79b, #3cc03c); /* Fondo verde suave */
-            color: #004d00; /* Texto en verde oscuro */
+            background: linear-gradient(135deg, #004d00, #1a7c1a, #3cc03c);
+            color: #f2f2f2;
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 20px;
         }
 
         .container {
-            background: #e6ffe6; /* Fondo verde claro */
+            background: #2b5f2b;
+            border: 2px solid #1a471a;
             padding: 30px 40px;
             border-radius: 12px;
-            box-shadow: 0px 10px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 0px 10px 15px rgba(0, 0, 0, 0.2);
             max-width: 400px;
+            width: 100%;
             text-align: center;
-            border: 2px solid #3cc03c;
         }
 
         h1 {
             font-size: 2rem;
             margin-bottom: 20px;
-            color: #004d00; /* Verde oscuro */
+            color: #fdfd96;
         }
 
         form {
@@ -47,11 +49,12 @@
             margin-bottom: 15px;
             padding: 10px;
             border-radius: 6px;
-            border: 1px solid #3cc03c; /* Borde verde */
+            border: 1px solid #3cc03c;
             outline: none;
             font-size: 1rem;
             width: 100%;
             max-width: 300px;
+            background: #f0fff0;
         }
 
         form button {
@@ -60,34 +63,14 @@
             border-radius: 6px;
             font-size: 1.2rem;
             color: white;
-            background: #3cc03c; /* Botón verde brillante */
+            background: #3cc03c;
             cursor: pointer;
             transition: background 0.3s ease, transform 0.2s ease;
         }
 
         form button:hover {
-            background: #28a028; /* Hover verde más oscuro */
+            background: #28a028;
             transform: translateY(-3px);
-        }
-
-        .register-link {
-            margin-top: 20px;
-            font-size: 1rem;
-            text-decoration: none;
-            color: #3cc03c;
-            transition: color 0.3s ease;
-        }
-
-        .register-link:hover {
-            color: #28a028; /* Hover más oscuro */
-        }
-
-        .logo img {
-            width: 100px;
-            height: 100px;
-            margin: 0 auto 20px;
-            border-radius: 50%;
-            box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.2);
         }
 
         .messages {
@@ -96,12 +79,32 @@
             border-radius: 6px;
             font-size: 1rem;
             text-align: left;
-            background-color: #fdfd96; /* Fondo amarillo para mensajes */
-            color: #4d4d00; /* Texto oscuro */
+            background-color: #fdfd96;
+            color: #4d4d00;
         }
 
         .messages li {
             list-style-type: none;
+        }
+
+        .logo img {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .register-link {
+            margin-top: 20px;
+            font-size: 1rem;
+            text-decoration: none;
+            color: #fdfd96;
+            transition: color 0.3s ease;
+        }
+
+        .register-link:hover {
+            color: #ffe75e;
         }
     </style>
 </head>
@@ -109,7 +112,7 @@
     <div class="container">
         <div class="logo">
             {% load static %}
-            <img src="{% static 'images/logo_admin.png' %}" alt="Logo del Sistema de Gestión Rural - Administrador">
+            <img src="{% static 'images/logo_admin.png' %}" alt="Logo del Administrador">
         </div>
         <h1>Iniciar Sesión - Administrador</h1>
 

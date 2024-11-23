@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil del Administrador</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #9be79b, #3cc03c); /* Fondo gradiente verde */
+            color: #004d00;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: #e6ffe6; /* Fondo verde muy claro */
+            border: 2px solid #3cc03c;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0px 10px 15px rgba(0, 0, 0, 0.1);
+            max-width: 700px;
+            width: 100%;
+        }
+
+        h1, h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #004d00; /* Verde oscuro */
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 20px 0;
+        }
+
+        ul li {
+            background: #d4f5d4; /* Fondo verde suave */
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 5px solid #3cc03c;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        ul li span {
+            color: #004d00;
+            font-size: 1rem;
+        }
+
+        button, a {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            color: white;
+            text-decoration: none;
+            background: #3cc03c; /* Botones en verde brillante */
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        button:hover, a:hover {
+            background: #28a028; /* Hover más oscuro */
+            transform: translateY(-3px);
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bienvenido, {{ usuario.username }}</h1>
+
+        <h2>Eventos</h2>
+        <a href="{% url 'crear_evento' %}" style="margin-bottom: 10px; display: inline-block;">Crear Evento</a>
+        <ul>
+            {% for evento in eventos %}
+                <li>
+                    <span>{{ evento.nombre }} - {{ evento.fecha }} - {{ evento.descripcion }}</span>
+                </li>
+            {% empty %}
+                <li>No hay eventos registrados.</li>
+            {% endfor %}
+        </ul>
+
+        <h2>Espacios</h2>
+        <a href="{% url 'crear_espacio' %}" style="margin-bottom: 10px; display: inline-block;">Crear Espacio</a>
+        <ul>
+            {% for espacio in espacios %}
+                <li>
+                    <span>{{ espacio.nombre }} - {{ espacio.disponible|yesno:"Disponible,No disponible" }}</span>
+                </li>
+            {% empty %}
+                <li>No hay espacios registrados.</li>
+            {% endfor %}
+        </ul>
+
+        <h2>Reservas</h2>
+        <ul>
+            {% for reserva in reservas %}
+                <li>
+                    <span>{{ reserva.usuario.username }} - {{ reserva.espacio.nombre }} ({{ reserva.fecha_inicio|date:"d/m/Y H:i" }} a {{ reserva.fecha_fin|date:"d/m/Y H:i" }})</span>
+                    <div class="actions">
+                        <a href="{% url 'gestionar_reserva' reserva.id %}" style="background-color: #f7d87c; color: black;">Gestionar</a>
+                    </div>
+                </li>
+            {% empty %}
+                <li>No hay reservas registradas.</li>
+            {% endfor %}
+        </ul>
+
+        <a href="{% url 'logout' %}" style="margin-top: 20px; display: inline-block;">Cerrar Sesión</a>
+    </div>
+</body>
+</html>

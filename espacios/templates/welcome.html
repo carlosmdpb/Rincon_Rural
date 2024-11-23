@@ -104,8 +104,8 @@
     <h1>¡Bienvenido al Sistema de Gestión Rural!</h1>
     <p>Elige una opción para continuar:</p>
     <div class="buttons">
-        <a href="/admin">Acceso Administrador</a>
-        <a href="/usuarios/login">Acceso Usuario</a>
+        <a href="{% url 'login_administrador' %}">Acceso Administrador</a>
+        <a href="{% url 'login' %}">Acceso Usuario</a>
     </div>
 </body>
 </html>
