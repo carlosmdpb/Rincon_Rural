@@ -35,6 +35,8 @@ def listar_reservas(request):
     reservas = Reserva.objects.filter(usuario=request.user)
     return render(request, 'listar.html', {'reservas': reservas})
 
+from collections import defaultdict
+
 def horas_disponibles(request, espacio_id, fecha):
     try:
         # Obtener el espacio y la zona horaria actual
@@ -64,10 +66,15 @@ def horas_disponibles(request, espacio_id, fecha):
 
             hora_actual = siguiente_hora
 
-        # Obtener las reservas existentes para el espacio en la fecha seleccionada
+        # Obtener las reservas existentes y eventos para el espacio en la fecha seleccionada
         reservas = Reserva.objects.filter(
             espacio=espacio,
             fecha_inicio__date=fecha_seleccionada
+        )
+        eventos = Evento.objects.filter(
+            espacio=espacio,
+            fecha_inicio__lte=fecha_fin_dia,
+            fecha_fin__gte=fecha_inicio_dia
         )
 
         # Contador de reservas por intervalo de tiempo
@@ -82,6 +89,16 @@ def horas_disponibles(request, espacio_id, fecha):
                 hora_time = datetime.strptime(hora, "%H:%M").time()
                 if inicio_reserva <= hora_time < fin_reserva:
                     reservas_por_intervalo[hora] += 1
+
+        # Excluir horas afectadas por eventos
+        for evento in eventos:
+            evento_inicio = evento.fecha_inicio.astimezone(tz).time()
+            evento_fin = evento.fecha_fin.astimezone(tz).time()
+
+            horas_disponibles_inicio = [
+                hora for hora in horas_disponibles_inicio
+                if not (evento_inicio.strftime("%H:%M") <= hora < evento_fin.strftime("%H:%M"))
+            ]
 
         # Ajustar las horas de inicio y fin dinámicamente
         horas_disponibles_dict = {}
@@ -105,7 +122,7 @@ def horas_disponibles(request, espacio_id, fecha):
         return JsonResponse({"error": "Espacio no encontrado"}, status=404)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
-    
+
 def dias_no_disponibles(request, espacio_id):
     try:
         espacio = get_object_or_404(Espacio, id=espacio_id)
