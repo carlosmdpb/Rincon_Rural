@@ -41,7 +41,10 @@ def horas_disponibles(request, espacio_id, fecha):
         espacio = get_object_or_404(Espacio, id=espacio_id)
         tz = get_current_timezone()
 
-        # Obtener la duración de la reserva deseada (en horas o día entero)
+        # Obtener dependencias del espacio
+        espacios_afectados = list(espacio.dependencias.all()) + [espacio]
+
+        # Obtener la duración de la reserva deseada
         duracion_horas = request.GET.get("duracion", "1")
 
         ahora = now().astimezone(tz)
@@ -71,12 +74,12 @@ def horas_disponibles(request, espacio_id, fecha):
 
         # Verificar disponibilidad por franja
         reservas = Reserva.objects.filter(
-            espacio=espacio,
+            espacio__in=espacios_afectados,
             fecha_inicio__lt=fecha_fin_dia,
             fecha_fin__gt=fecha_inicio_dia,
         )
         eventos = Evento.objects.filter(
-            espacio=espacio,
+            espacio__in=espacios_afectados,
             fecha_inicio__lt=fecha_fin_dia,
             fecha_fin__gt=fecha_inicio_dia,
         )
@@ -97,11 +100,15 @@ def horas_disponibles(request, espacio_id, fecha):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
 
+
 def dias_no_disponibles(request, espacio_id):
     try:
         espacio = get_object_or_404(Espacio, id=espacio_id)
         tz = get_current_timezone()
         dias_no_disponibles = []
+
+        # Obtener espacios afectados (espacio y sus dependencias)
+        espacios_afectados = list(espacio.dependencias.all()) + [espacio]
 
         # Analizar los próximos 30 días
         fecha_actual = now().astimezone(tz).date()
@@ -110,45 +117,35 @@ def dias_no_disponibles(request, espacio_id):
             fecha_inicio_dia = make_aware(datetime.combine(fecha, espacio.hora_apertura), tz)
             fecha_fin_dia = make_aware(datetime.combine(fecha, espacio.hora_cierre), tz)
 
-            # Generar franjas horarias del día
-            franjas = []
-            hora_actual = fecha_inicio_dia
-
-            # Si es hoy, ajustar para excluir franjas pasadas
-            if fecha == fecha_actual:
-                hora_actual = now().astimezone(tz).replace(minute=0, second=0, microsecond=0)
-                if now().minute > 0:
-                    hora_actual += timedelta(hours=1)
-
-            while hora_actual < fecha_fin_dia:
-                siguiente_hora = hora_actual + timedelta(hours=1)
-                franjas.append((hora_actual, siguiente_hora))
-                hora_actual = siguiente_hora
-
-            # Verificar disponibilidad de cada franja
-            reservas = Reserva.objects.filter(
-                espacio=espacio,
-                fecha_inicio__lt=fecha_fin_dia,
-                fecha_fin__gt=fecha_inicio_dia,
-            )
+            # Buscar eventos y reservas para espacios afectados
             eventos = Evento.objects.filter(
-                espacio=espacio,
+                espacio__in=espacios_afectados,
+                fecha_inicio__lt=fecha_fin_dia,
+                fecha_fin__gt=fecha_inicio_dia,
+            )
+            reservas = Reserva.objects.filter(
+                espacio__in=espacios_afectados,
                 fecha_inicio__lt=fecha_fin_dia,
                 fecha_fin__gt=fecha_inicio_dia,
             )
 
-            dia_disponible = False
-            for inicio, fin in franjas:
-                reservas_en_franja = reservas.filter(fecha_inicio__lt=fin, fecha_fin__gt=inicio)
-                eventos_en_franja = eventos.filter(fecha_inicio__lt=fin, fecha_fin__gt=inicio)
+            # Bloquear día completo si hay eventos que duran todo el día
+            if eventos.exists():
+                dia_bloqueado = True
+            else:
+                dia_bloqueado = False
+                hora_actual = fecha_inicio_dia
+                while hora_actual < fecha_fin_dia:
+                    siguiente_hora = hora_actual + timedelta(hours=1)
+                    reservas_en_franja = reservas.filter(fecha_inicio__lt=siguiente_hora, fecha_fin__gt=hora_actual)
+                    eventos_en_franja = eventos.filter(fecha_inicio__lt=siguiente_hora, fecha_fin__gt=hora_actual)
 
-                # Si hay una franja disponible, el día es válido
-                if reservas_en_franja.count() < espacio.capacidad and not eventos_en_franja.exists():
-                    dia_disponible = True
-                    break
+                    if reservas_en_franja.count() < espacio.capacidad and not eventos_en_franja.exists():
+                        dia_bloqueado = False
+                        break
+                    hora_actual = siguiente_hora
 
-            # Si no hay ninguna franja disponible, el día está bloqueado
-            if not dia_disponible:
+            if dia_bloqueado:
                 dias_no_disponibles.append(fecha.strftime("%Y-%m-%d"))
 
         return JsonResponse({"dias_no_disponibles": dias_no_disponibles})
@@ -157,6 +154,7 @@ def dias_no_disponibles(request, espacio_id):
         return JsonResponse({"error": "Espacio no encontrado"}, status=404)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
+
 
 def cancelar_reserva(request, reserva_id):
     reserva = get_object_or_404(Reserva, id=reserva_id, usuario=request.user)
