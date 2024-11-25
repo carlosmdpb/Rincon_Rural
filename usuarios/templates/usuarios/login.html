@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar Sesión - Administrador</title>
+    <title>Iniciar Sesión</title>
     <style>
         * {
             margin: 0;
@@ -14,11 +14,12 @@
         body {
             font-family: Arial, sans-serif;
             background: linear-gradient(135deg, #9be79b, #3cc03c); /* Fondo verde suave */
-            color: #004d00; /* Texto en verde oscuro */
+            color: #004d00; /* Texto verde oscuro */
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 20px;
         }
 
         .container {
@@ -109,9 +110,9 @@
     <div class="container">
         <div class="logo">
             {% load static %}
-            <img src="{% static 'images/logo_admin.png' %}" alt="Logo del Sistema de Gestión Rural - Administrador">
+            <img src="{% static 'images/logo_without_text.png' %}" alt="Logo del Sistema de Gestión Rural">
         </div>
-        <h1>Iniciar Sesión - Administrador</h1>
+        <h1>Iniciar Sesión</h1>
 
         <!-- Bloque para mostrar mensajes -->
         {% if messages %}
@@ -127,7 +128,7 @@
             {{ form.as_p }}
             <button type="submit">Iniciar Sesión</button>
         </form>
-        <a href="{% url 'bienvenido' %}" class="register-link">Volver a la página principal</a>
+        <a href="{% url 'registro' %}" class="register-link">¿No tienes cuenta? Regístrate aquí</a>
     </div>
 </body>
 </html>
