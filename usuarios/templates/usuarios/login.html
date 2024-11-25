@@ -14,11 +14,12 @@
         body {
             font-family: Arial, sans-serif;
             background: linear-gradient(135deg, #9be79b, #3cc03c); /* Fondo verde suave */
-            color: #004d00; /* Texto en verde oscuro */
+            color: #004d00; /* Texto verde oscuro */
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 20px;
         }
 
         .container {
@@ -89,6 +90,20 @@
             border-radius: 50%;
             box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.2);
         }
+
+        .messages {
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 1rem;
+            text-align: left;
+            background-color: #fdfd96; /* Fondo amarillo para mensajes */
+            color: #4d4d00; /* Texto oscuro */
+        }
+
+        .messages li {
+            list-style-type: none;
+        }
     </style>
 </head>
 <body>
@@ -98,6 +113,16 @@
             <img src="{% static 'images/logo_without_text.png' %}" alt="Logo del Sistema de Gestión Rural">
         </div>
         <h1>Iniciar Sesión</h1>
+
+        <!-- Bloque para mostrar mensajes -->
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li class="{{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
         <form method="post">
             {% csrf_token %}
             {{ form.as_p }}

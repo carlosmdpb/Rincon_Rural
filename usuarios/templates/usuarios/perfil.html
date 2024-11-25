@@ -117,16 +117,37 @@
                         <button type="submit">Reservar</button>
                     </form>
                 </li>
+            {% empty %}
+                <li>No hay espacios disponibles.</li>
             {% endfor %}
         </ul>
 
-        <h2>Mis Reservas</h2>
+        <h2>Reservas Activas</h2>
         <ul>
-            {% for reserva in reservas %}
+            {% for reserva in reservas_activas %}
                 <li>
                     <span>{{ reserva.espacio.nombre }}: {{ reserva.fecha_inicio|date:"d/m/Y H:i" }} - {{ reserva.fecha_fin|date:"d/m/Y H:i" }}
                     ({{ reserva.get_estado_display }})</span>
+                    <form action="{% url 'cancelar_reserva' reserva.id %}" method="post" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" onclick="return confirm('¿Estás seguro de que deseas cancelar esta reserva?');" style="background-color: #f56c79; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">
+                            Cancelar
+                        </button>
+                    </form>
                 </li>
+            {% empty %}
+                <li>No tienes reservas activas.</li>
+            {% endfor %}
+        </ul>
+
+        <h2>Reservas Pasadas</h2>
+        <ul>
+            {% for reserva in reservas_pasadas %}
+                <li>
+                    <span>{{ reserva.espacio.nombre }}: {{ reserva.fecha_inicio|date:"d/m/Y H:i" }} - {{ reserva.fecha_fin|date:"d/m/Y H:i" }}</span>
+                </li>
+            {% empty %}
+                <li>No tienes reservas pasadas.</li>
             {% endfor %}
         </ul>
 

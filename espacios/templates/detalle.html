@@ -12,5 +12,8 @@
     <p><strong>Descripción:</strong> {{ espacio.descripcion }}</p>
     <p><strong>Horario:</strong> {{ espacio.hora_apertura }} - {{ espacio.hora_cierre }}</p>
     <a href="{% url 'listar_espacios' %}">Volver a la Lista</a>
+    <div class="buttons">
+        <a href="{% url 'gestionar_dependencias' %}">Gestionar Dependencias</a>
+    </div>
 </body>
 </html>

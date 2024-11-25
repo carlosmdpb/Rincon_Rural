@@ -2,9 +2,11 @@ from datetime import time
 from django.shortcuts import redirect, render, get_object_or_404
 from .models import Espacio
 from .forms import EspacioForm
+from calificaciones.models import Calificacion
+from django.contrib.auth.decorators import login_required
 
 # Create your views here.
-
+@login_required
 def listar_espacios(request):
     filtro_reserva = request.GET.get('reserva_activa', 'todo')
     espacios = Espacio.objects.all()
@@ -12,6 +14,9 @@ def listar_espacios(request):
         espacios = espacios.filter(reserva__isnull=False)
     elif filtro_reserva == 'no':
         espacios = espacios.filter(reserva__isnull=True)
+
+    espacios = Espacio.objects.filter(codigo_postal=request.user.codigo_postal)
+
     return render(request, 'espacios/listar.html', {'espacios': espacios, 'filtro_reserva': filtro_reserva})
 
 def detalle_espacio(request, espacio_id):
@@ -40,4 +45,16 @@ def crear_espacio(request):
     return render(request, 'espacios/crear.html', {'form': form})
 
 def welcome(request):
-    return render(request, 'welcome.html')
+    # Obtener la calificación media
+    try:
+        calificacion = Calificacion.objects.get(id=1)
+        promedio = calificacion.promedio
+    except Calificacion.DoesNotExist:
+        promedio = 0  # Si no hay calificaciones, el promedio es 0
+
+    # Renderizar la plantilla con el promedio
+    return render(request, 'welcome.html', {'promedio': promedio})
+
+
+def gestionar_dependencias(request):
+    return render(request, 'gestionar_dependencias.html')

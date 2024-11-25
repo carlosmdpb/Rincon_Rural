@@ -8,7 +8,9 @@ class Espacio(models.Model):
     disponible = models.BooleanField(default=True)
     hora_apertura = models.TimeField()
     hora_cierre = models.TimeField()
-    
+    dependencias = models.ManyToManyField('self', symmetrical=False, blank=True)
+    codigo_postal = models.CharField(max_length=5, default="00000")
+
     def __str__(self):
         return self.nombre
     
@@ -17,3 +19,14 @@ class Espacio(models.Model):
         Verifica si el espacio está disponible a una hora específica.
         """
         return self.hora_apertura <= hora <= self.hora_cierre
+    
+    def esta_disponible(self):
+        """
+        Verifica si el espacio está disponible, considerando sus dependencias.
+        """
+        if not self.disponible:
+            return False
+        for dependencia in self.dependencias.all():
+            if not dependencia.disponible:
+                return False
+        return True
