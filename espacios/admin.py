@@ -10,7 +10,15 @@ from .forms import GestionarDependenciasForm
 # Register your models here.
 
 class EspacioAdmin(admin.ModelAdmin):
-    list_display = ['nombre', 'capacidad', 'disponible', 'hora_apertura', 'hora_cierre']
+    list_display = ['nombre', 'capacidad', 'disponible', 'hora_apertura', 'hora_cierre', 'mostrar_dependencias']
+
+    def mostrar_dependencias(self, obj):
+        """
+        Devuelve una lista de nombres de los espacios dependientes.
+        """
+        return ", ".join([dependencia.nombre for dependencia in obj.dependencias.all()])
+    
+    mostrar_dependencias.short_description = "Dependencias"
 
 
     def change_view(self, request, object_id, form_url='', extra_context=None):
