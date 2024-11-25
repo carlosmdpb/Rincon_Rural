@@ -139,16 +139,8 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'  # Carpeta donde se recopilarán los arch
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-'''
 
-# Configuración de correo electrónico
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.tu-proveedor.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'tu-email@example.com'
-EMAIL_HOST_PASSWORD = 'tu-contraseña'
-DEFAULT_FROM_EMAIL = 'tu-email@example.com'
 
-'''
+
+
 
