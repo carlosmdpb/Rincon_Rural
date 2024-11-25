@@ -41,3 +41,6 @@ def crear_espacio(request):
 
 def welcome(request):
     return render(request, 'welcome.html')
+
+def gestionar_dependencias(request):
+    return render(request, 'gestionar_dependencias.html')

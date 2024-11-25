@@ -98,7 +98,7 @@ def cerrar_sesion(request):
 @login_required
 def perfil_usuario(request):
     # Obtener la hora actual y restarle una hora
-    hora_actual = now() + timedelta(hours=1)
+    hora_actual = now() + timedelta(hours=2)
 
     # Espacios disponibles
     espacios = Espacio.objects.filter(disponible=True)

@@ -7,4 +7,5 @@ urlpatterns = [
     path('espacios/<int:espacio_id>/', views.detalle_espacio, name='detalle_espacio'),
     path('espacios/crear/', views.crear_espacio, name='crear_espacio'),
     path('', views.welcome, name='welcome'),
+    path('gestionar_dependencias/', views.gestionar_dependencias, name='gestionar_dependencias'),
 ]

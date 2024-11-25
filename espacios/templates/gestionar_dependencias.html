@@ -1,0 +1,13 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+  <h1>Gestionar Dependencias para {{ espacio.nombre }}</h1>
+
+  <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="button default">Guardar Cambios</button>
+  </form>
+
+  <a href="{% url 'admin:espacios_espacio_changelist' %}" class="button">Volver</a>
+{% endblock %}
