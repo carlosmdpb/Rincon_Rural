@@ -10,7 +10,7 @@ class Usuario(AbstractUser):
     rol = models.CharField(max_length=15, choices=ROLES, default='ciudadano')
     dni = models.CharField(max_length=15, unique=True, blank=True, null=True)  
     codigo_postal = models.CharField(max_length=5, blank=False, null=False)
-
+    contador = models.IntegerField(default=0)
 
 
     # Agrega related_name únicos para evitar conflictos

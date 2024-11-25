@@ -158,7 +158,6 @@ def cancelar_reserva(request, reserva_id):
     reserva = get_object_or_404(Reserva, id=reserva_id, usuario=request.user)
     if request.method == 'POST':
         reserva.delete()
-        messages.success(request, 'Reserva cancelada con éxito.')
         return redirect('perfil_usuario')
     return render(request, 'cancelar_reserva.html', {'reserva': reserva})
 
@@ -186,7 +185,6 @@ def editar_reserva(request, reserva_id):
             reserva.fecha_fin = fecha_fin
             reserva.save()
 
-            messages.success(request, "Reserva actualizada correctamente.")
             return redirect('perfil_usuario')
 
         except Exception as e:

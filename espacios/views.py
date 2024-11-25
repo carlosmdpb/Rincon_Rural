@@ -2,6 +2,7 @@ from datetime import time
 from django.shortcuts import redirect, render, get_object_or_404
 from .models import Espacio
 from .forms import EspacioForm
+from calificaciones.models import Calificacion
 
 # Create your views here.
 
@@ -40,7 +41,16 @@ def crear_espacio(request):
     return render(request, 'espacios/crear.html', {'form': form})
 
 def welcome(request):
-    return render(request, 'welcome.html')
+    # Obtener la calificación media
+    try:
+        calificacion = Calificacion.objects.get(id=1)
+        promedio = calificacion.promedio
+    except Calificacion.DoesNotExist:
+        promedio = 0  # Si no hay calificaciones, el promedio es 0
+
+    # Renderizar la plantilla con el promedio
+    return render(request, 'welcome.html', {'promedio': promedio})
+
 
 def gestionar_dependencias(request):
     return render(request, 'gestionar_dependencias.html')

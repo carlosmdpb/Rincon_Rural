@@ -191,7 +191,12 @@ def reservar_espacio(request, espacio_id):
                     fecha_fin=fecha_fin,
                 )
                 reserva.save()
-                return redirect('perfil_usuario')
+                request.user.contador += 1
+                request.user.save()
+                if (request.user.contador == 2):
+                    return redirect('valorar_app')
+                else:
+                    return redirect('perfil_usuario')
 
             except Exception as e:
                 messages.error(request, f"Error al procesar la reserva: {str(e)}")
