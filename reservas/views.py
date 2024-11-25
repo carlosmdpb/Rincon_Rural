@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Reserva, Espacio
+from eventos.models import Evento
 from .forms import ReservaForm
 from django.contrib import messages
 from django.http import JsonResponse
@@ -68,25 +69,30 @@ def horas_disponibles(request, espacio_id, fecha):
             fecha_inicio__date=fecha_seleccionada
         )
 
-        # También considerar las reservas de los espacios dependientes
-        dependencias = espacio.dependencias.all()
-        reservas_dependencias = Reserva.objects.filter(
-            espacio__in=dependencias,
+        # Obtener eventos existentes que afecten al espacio
+        eventos = Evento.objects.filter(
+            espacio=espacio,
             fecha_inicio__date=fecha_seleccionada
         )
 
-        # Combinar todas las reservas relevantes
-        todas_las_reservas = list(reservas) + list(reservas_dependencias)
-
         # Ajustar las horas de inicio para evitar conflictos
-        for reserva in todas_las_reservas:
+        for reserva in reservas:
             reserva_inicio = reserva.fecha_inicio.astimezone(tz).time()
             reserva_fin = reserva.fecha_fin.astimezone(tz).time()
 
-            # Eliminar horas de inicio que caigan dentro de una reserva activa
             horas_disponibles_inicio = [
                 hora for hora in horas_disponibles_inicio
                 if not (reserva_inicio.strftime("%H:%M") <= hora < reserva_fin.strftime("%H:%M"))
+            ]
+
+        # Ajustar por eventos
+        for evento in eventos:
+            evento_inicio = evento.fecha_inicio.astimezone(tz).time()
+            evento_fin = evento.fecha_fin.astimezone(tz).time()
+
+            horas_disponibles_inicio = [
+                hora for hora in horas_disponibles_inicio
+                if not (evento_inicio.strftime("%H:%M") <= hora < evento_fin.strftime("%H:%M"))
             ]
 
         # Ajustar las horas de fin dinámicamente según la hora de inicio seleccionada
@@ -95,11 +101,14 @@ def horas_disponibles(request, espacio_id, fecha):
             horas_finales_validas = []
             for fin in horas_disponibles_fin:
                 if fin > inicio:
-                    # Comprobar conflictos con reservas activas
                     conflicto = any(
                         datetime.strptime(inicio, "%H:%M").time() < reserva.fecha_fin.time() <= datetime.strptime(fin, "%H:%M").time()
                         or datetime.strptime(fin, "%H:%M").time() > reserva.fecha_inicio.time() >= datetime.strptime(inicio, "%H:%M").time()
-                        for reserva in todas_las_reservas
+                        for reserva in reservas
+                    ) or any(
+                        datetime.strptime(inicio, "%H:%M").time() < evento.fecha_fin.time() <= datetime.strptime(fin, "%H:%M").time()
+                        or datetime.strptime(fin, "%H:%M").time() > evento.fecha_inicio.time() >= datetime.strptime(inicio, "%H:%M").time()
+                        for evento in eventos
                     )
                     if not conflicto:
                         horas_finales_validas.append(fin)
@@ -117,44 +126,22 @@ def dias_no_disponibles(request, espacio_id):
     try:
         espacio = get_object_or_404(Espacio, id=espacio_id)
         tz = get_current_timezone()
-        fecha_actual = now().astimezone(tz).date()
-        hora_actual = now().astimezone(tz).time()
         dias_no_disponibles = []
 
-        # Analizar los próximos 30 días
-        for i in range(30):  # Por ejemplo, 30 días futuros
-            fecha = fecha_actual + timedelta(days=i)
-            fecha_inicio_dia = make_aware(datetime.combine(fecha, datetime.min.time()), tz)
-            fecha_fin_dia = make_aware(datetime.combine(fecha, datetime.max.time()), tz)
+        # Buscar todos los eventos asociados al espacio
+        eventos = Evento.objects.filter(espacio=espacio)
 
-            # Generar todas las horas posibles del día
-            hora_actual_dia = make_aware(datetime.combine(fecha, espacio.hora_apertura), tz)
-            hora_cierre = make_aware(datetime.combine(fecha, espacio.hora_cierre), tz)
-            horas_disponibles = []
+        for evento in eventos:
+            # Si un evento comienza a las 09:00 y termina a las 23:00, bloquea el día completo
+            inicio_evento = evento.fecha_inicio.astimezone(tz)
+            fin_evento = evento.fecha_fin.astimezone(tz)
 
-            while hora_actual_dia < hora_cierre:
-                if fecha > fecha_actual or hora_actual_dia.time() > hora_actual:
-                    horas_disponibles.append(hora_actual_dia.strftime("%H:%M"))
-                hora_actual_dia += timedelta(hours=1)
-
-            # Excluir horas ocupadas
-            reservas = Reserva.objects.filter(
-                espacio=espacio,
-                fecha_inicio__gte=fecha_inicio_dia,
-                fecha_inicio__lt=fecha_fin_dia,
-            )
-            for reserva in reservas:
-                hora_inicio_reserva = reserva.fecha_inicio.astimezone(tz).time()
-                hora_fin_reserva = reserva.fecha_fin.astimezone(tz).time()
-                horas_disponibles = [
-                    hora
-                    for hora in horas_disponibles
-                    if not (hora_inicio_reserva <= datetime.strptime(hora, "%H:%M").time() < hora_fin_reserva)
-                ]
-
-            # Si no hay horas disponibles, deshabilitar el día
-            if not horas_disponibles:
-                dias_no_disponibles.append(fecha.strftime("%Y-%m-%d"))
+            if (
+                inicio_evento.time() == datetime.strptime("09:00", "%H:%M").time()
+                and fin_evento.time() == datetime.strptime("23:00", "%H:%M").time()
+            ):
+                # Bloquea el día del evento
+                dias_no_disponibles.append(inicio_evento.date().strftime("%Y-%m-%d"))
 
         return JsonResponse({"dias_no_disponibles": dias_no_disponibles})
 
@@ -162,6 +149,7 @@ def dias_no_disponibles(request, espacio_id):
         return JsonResponse({"error": "Espacio no encontrado"}, status=404)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
+
 
 def cancelar_reserva(request, reserva_id):
     reserva = get_object_or_404(Reserva, id=reserva_id, usuario=request.user)
