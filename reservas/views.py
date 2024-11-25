@@ -68,8 +68,18 @@ def horas_disponibles(request, espacio_id, fecha):
             fecha_inicio__date=fecha_seleccionada
         )
 
+        # También considerar las reservas de los espacios dependientes
+        dependencias = espacio.dependencias.all()
+        reservas_dependencias = Reserva.objects.filter(
+            espacio__in=dependencias,
+            fecha_inicio__date=fecha_seleccionada
+        )
+
+        # Combinar todas las reservas relevantes
+        todas_las_reservas = list(reservas) + list(reservas_dependencias)
+
         # Ajustar las horas de inicio para evitar conflictos
-        for reserva in reservas:
+        for reserva in todas_las_reservas:
             reserva_inicio = reserva.fecha_inicio.astimezone(tz).time()
             reserva_fin = reserva.fecha_fin.astimezone(tz).time()
 
@@ -89,7 +99,7 @@ def horas_disponibles(request, espacio_id, fecha):
                     conflicto = any(
                         datetime.strptime(inicio, "%H:%M").time() < reserva.fecha_fin.time() <= datetime.strptime(fin, "%H:%M").time()
                         or datetime.strptime(fin, "%H:%M").time() > reserva.fecha_inicio.time() >= datetime.strptime(inicio, "%H:%M").time()
-                        for reserva in reservas
+                        for reserva in todas_las_reservas
                     )
                     if not conflicto:
                         horas_finales_validas.append(fin)
@@ -102,7 +112,6 @@ def horas_disponibles(request, espacio_id, fecha):
         return JsonResponse({"error": "Espacio no encontrado"}, status=404)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
-
     
 def dias_no_disponibles(request, espacio_id):
     try:
