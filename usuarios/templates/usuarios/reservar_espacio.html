@@ -123,19 +123,27 @@
             <!-- Campo oculto para enviar la fecha seleccionada -->
             <input type="hidden" id="fecha" name="fecha">
 
+            <!-- Selector de duración -->
             <div class="form-group">
-                <label for="hora-inicio">Selecciona la hora de inicio</label>
-                <select id="hora-inicio" name="hora_inicio" required disabled>
-                    <option value="" selected>Seleccione una hora inicial</option>
+                <label for="duracion">¿Cuántas horas quieres reservar?</label>
+                <select id="duracion" name="duracion" required disabled>
+                    <option value="" selected>Seleccione la duración</option>
+                    <option value="1">1 hora</option>
+                    <option value="2">2 horas</option>
+                    <option value="3">3 horas</option>
+                    <option value="4">4 horas</option>
+                    <option value="5">5 horas</option>
+                    <option value="dia">Día entero</option>
                 </select>
-            </div>
+            </div>            
 
+            <!-- Selector de franjas horarias -->
             <div class="form-group">
-                <label for="hora-fin">Selecciona la hora de fin</label>
-                <select id="hora-fin" name="hora_fin" required disabled>
-                    <option value="" selected>Seleccione una hora final</option>
+                <label for="franja-horaria">Selecciona una franja horaria</label>
+                <select id="franja-horaria" name="franja_horaria" required disabled>
+                    <option value="" selected>Seleccione una franja horaria</option>
                 </select>
-            </div>
+            </div>            
 
             <button type="submit">Confirmar Reserva</button>
         </form>
@@ -146,100 +154,109 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-    const calendarioDiv = document.getElementById("calendario");
-    const horaInicioSelect = document.getElementById("hora-inicio");
-    const horaFinSelect = document.getElementById("hora-fin");
-    const fechaInput = document.getElementById("fecha");
+            const calendarioDiv = document.getElementById("calendario");
+            const franjaHorariaSelect = document.getElementById("franja-horaria");
+            const duracionSelect = document.getElementById("duracion");
+            const fechaInput = document.getElementById("fecha");
 
-    // Cargar días no disponibles
-    fetch(`/reservas/dias-no-disponibles/{{ espacio.id }}/`)
-        .then((response) => {
-            if (!response.ok) {
-                throw new Error("Error al obtener los días no disponibles.");
-            }
-            return response.json();
-        })
-        .then((data) => {
-            const diasNoDisponibles = data.dias_no_disponibles || [];
-            configurarCalendario(diasNoDisponibles);
-        })
-        .catch((error) => {
-            console.error("Error cargando días no disponibles:", error);
-        });
-
-    function configurarCalendario(diasNoDisponibles) {
-        flatpickr(calendarioDiv, {
-            inline: true,
-            dateFormat: "Y-m-d",
-            minDate: "today",
-            disable: diasNoDisponibles,
-            onChange: function (selectedDates, dateStr) {
-                fechaInput.value = dateStr; // Actualizar fecha seleccionada
-                cargarHorasDisponibles(dateStr);
-            },
-        });
-    }
-
-    function cargarHorasDisponibles(fechaSeleccionada) {
-        const espacioId = "{{ espacio.id }}";
-
-        fetch(`/reservas/horas-disponibles/${espacioId}/${fechaSeleccionada}/`)
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error("Error al obtener las horas disponibles.");
-                }
-                return response.json();
-            })
-            .then((data) => {
-                if (data.horas_disponibles) {
-                    horaInicioSelect.innerHTML = `<option value="">Seleccione hora de inicio</option>`;
-                    horaFinSelect.innerHTML = `<option value="">Seleccione hora de fin</option>`;
-                    horaFinSelect.disabled = true;
-
-                    // Llenar el select de horas de inicio
-                    Object.keys(data.horas_disponibles).forEach((horaInicio) => {
-                        const option = document.createElement("option");
-                        option.value = horaInicio;
-                        option.textContent = horaInicio;
-                        horaInicioSelect.appendChild(option);
-                    });
-
-                    horaInicioSelect.disabled = false;
-                }
-            })
-            .catch((error) => {
-                console.error("Error:", error);
-                alert("No se pudieron cargar las horas disponibles. Inténtalo más tarde.");
-            });
-    }
-
-    horaInicioSelect.addEventListener("change", function () {
-        const horaSeleccionada = horaInicioSelect.value;
-        const espacioId = "{{ espacio.id }}";
-        const fechaSeleccionada = fechaInput.value;
-
-        if (horaSeleccionada && fechaSeleccionada) {
-            fetch(`/reservas/horas-disponibles/${espacioId}/${fechaSeleccionada}/`)
+            // Cargar días no disponibles
+            fetch(`/reservas/dias-no-disponibles/{{ espacio.id }}/`)
                 .then((response) => response.json())
                 .then((data) => {
-                    const horasFinales = data.horas_disponibles[horaSeleccionada] || [];
-                    horaFinSelect.innerHTML = `<option value="">Seleccione hora de fin</option>`;
-
-                    horasFinales.forEach((horaFin) => {
-                        const option = document.createElement("option");
-                        option.value = horaFin;
-                        option.textContent = horaFin;
-                        horaFinSelect.appendChild(option);
-                    });
-
-                    horaFinSelect.disabled = horasFinales.length === 0;
+                    const diasNoDisponibles = data.dias_no_disponibles || [];
+                    configurarCalendario(diasNoDisponibles);
                 })
-                .catch((error) => console.error("Error al cargar horas finales:", error));
+                .catch((error) => {
+                    console.error("Error cargando días no disponibles:", error);
+                    alert("No se pudieron cargar los días no disponibles. Inténtalo más tarde.");
+                });
+
+            function configurarCalendario(diasNoDisponibles) {
+                flatpickr(calendarioDiv, {
+                    inline: true,
+                    dateFormat: "Y-m-d",
+                    minDate: "today",
+                    disable: diasNoDisponibles,
+                    onChange: function (selectedDates, dateStr) {
+                        fechaInput.value = dateStr; // Actualizar fecha seleccionada
+                        duracionSelect.disabled = false; // Habilitar el selector de duración
+                        franjaHorariaSelect.disabled = true; // Deshabilitar hasta que se seleccione duración
+                    },
+                });
+            }
+
+            // Cargar franjas horarias cuando se seleccione la duración
+            duracionSelect.addEventListener("change", function () {
+    const duracion = duracionSelect.value;
+    const fechaSeleccionada = fechaInput.value;
+
+    if (duracion && fechaSeleccionada) {
+        if (duracion === "dia") {
+            // Si se selecciona "día entero", cargar la franja completa
+            cargarFranjaDiaEntero(fechaSeleccionada);
+        } else {
+            // Cargar las franjas normales basadas en la duración seleccionada
+            cargarFranjasDisponibles(fechaSeleccionada, duracion);
         }
-    });
+    }
 });
 
+function cargarFranjasDisponibles(fechaSeleccionada, duracion) {
+    const espacioId = "{{ espacio.id }}";
+
+    franjaHorariaSelect.disabled = true;
+    franjaHorariaSelect.innerHTML = `<option value="">Cargando franjas...</option>`;
+
+    fetch(`/reservas/horas-disponibles/${espacioId}/${fechaSeleccionada}/?duracion=${duracion}`)
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.franjas_disponibles && data.franjas_disponibles.length > 0) {
+                franjaHorariaSelect.innerHTML = `<option value="">Seleccione una franja horaria</option>`;
+                data.franjas_disponibles.forEach(([inicio, fin]) => {
+                    const option = document.createElement("option");
+                    option.value = `${inicio}-${fin}`;
+                    option.textContent = `${inicio} - ${fin}`;
+                    franjaHorariaSelect.appendChild(option);
+                });
+                franjaHorariaSelect.disabled = false;
+            } else {
+                franjaHorariaSelect.innerHTML = `<option value="">No hay franjas disponibles</option>`;
+            }
+        })
+        .catch((error) => {
+            console.error("Error cargando franjas horarias:", error);
+            franjaHorariaSelect.innerHTML = `<option value="">Error al cargar</option>`;
+        });
+}
+
+function cargarFranjaDiaEntero(fechaSeleccionada) {
+    const espacioId = "{{ espacio.id }}";
+
+    franjaHorariaSelect.disabled = true;
+    franjaHorariaSelect.innerHTML = `<option value="">Cargando franjas...</option>`;
+
+    fetch(`/reservas/horas-disponibles/${espacioId}/${fechaSeleccionada}/?duracion=dia`)
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.franjas_disponibles && data.franjas_disponibles.length > 0) {
+                franjaHorariaSelect.innerHTML = `<option value="">Seleccione una franja horaria</option>`;
+                data.franjas_disponibles.forEach(([inicio, fin]) => {
+                    const option = document.createElement("option");
+                    option.value = `${inicio}-${fin}`;
+                    option.textContent = `${inicio} - ${fin}`;
+                    franjaHorariaSelect.appendChild(option);
+                });
+                franjaHorariaSelect.disabled = false;
+            } else {
+                franjaHorariaSelect.innerHTML = `<option value="">No hay franjas disponibles</option>`;
+            }
+        })
+        .catch((error) => {
+            console.error("Error cargando franjas horarias:", error);
+            franjaHorariaSelect.innerHTML = `<option value="">Error al cargar</option>`;
+        });
+        }
+    });
     </script>
-    
 </body>
 </html>

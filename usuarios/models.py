@@ -11,6 +11,7 @@ class Usuario(AbstractUser):
     dni = models.CharField(max_length=15, unique=True, blank=True, null=True)  
     codigo_postal = models.CharField(max_length=5, blank=False, null=False)
     contador = models.IntegerField(default=0)
+    REQUIRED_FIELDS = ['codigo_postal']
 
 
     # Agrega related_name únicos para evitar conflictos

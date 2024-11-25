@@ -9,16 +9,12 @@ from eventos.models import Evento
 from reservas.forms import ReservaForm
 from reservas.models import Reserva
 from .forms import RegistroForm, EventoForm, EspacioForm
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.contrib.messages import get_messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
 from django.utils.timezone import make_aware, get_current_timezone, now
-
-# Función para verificar si el usuario es administrador
-def es_administrador(usuario):
-    return usuario.is_authenticated and usuario.rol == 'administrador'
 
 # Vista para el registro de usuarios
 def registro(request):
@@ -52,9 +48,7 @@ class LoginUsuario(LoginView):
     def get_success_url(self):
         # Redirige según el rol del usuario
         user = self.request.user
-        if user.rol == 'administrador':
-            return reverse_lazy('perfil_administrador')
-        elif user.is_superuser:  # Caso de superusuario
+        if user.is_superuser:  # Caso de superusuario
             return reverse_lazy('admin:index')  # Redirige al panel de superusuario
         else:
             return reverse_lazy('perfil_usuario')
@@ -117,70 +111,40 @@ def perfil_usuario(request):
     })
 
 @login_required
-@user_passes_test(es_administrador)
-def perfil_administrador(request):
-    eventos = Evento.objects.all()
-    espacios = Espacio.objects.all()
-    reservas = Reserva.objects.all()
-    return render(request, 'usuarios/perfil_administrador.html', {
-        'usuario': request.user,
-        'eventos': eventos,
-        'espacios': espacios,
-        'reservas': reservas
-    })
-
-@login_required
-@user_passes_test(es_administrador)
-def crear_evento(request):
-    if request.method == 'POST':
-        form = EventoForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('perfil_administrador')
-    else:
-        form = EventoForm()
-    return render(request, 'usuarios/crear_evento.html', {'form': form})
-
-@login_required
-@user_passes_test(es_administrador)
-def crear_espacio(request):
-    if request.method == 'POST':
-        form = EspacioForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('perfil_administrador')
-    else:
-        form = EspacioForm()
-    return render(request, 'usuarios/crear_espacio.html', {'form': form})
-
-@login_required
-@user_passes_test(es_administrador)
-def gestionar_reserva(request, reserva_id):
-    reserva = get_object_or_404(Reserva, id=reserva_id)
-    if request.method == 'POST':
-        reserva.estado = 'cancelada'
-        reserva.save()
-        return redirect('perfil_administrador')
-    return render(request, 'usuarios/gestionar_reserva.html', {'reserva': reserva})
-
-@login_required
 def reservar_espacio(request, espacio_id):
     espacio = get_object_or_404(Espacio, id=espacio_id)
     tz = get_current_timezone()  # Obtener la zona horaria actual
 
     if request.method == 'POST':
         fecha = request.POST.get('fecha')
-        hora_inicio = request.POST.get('hora_inicio')
-        hora_fin = request.POST.get('hora_fin')
+        franja_horaria = request.POST.get('franja_horaria')  # Recibir la franja horaria seleccionada
 
-        if fecha and hora_inicio and hora_fin:
+        if fecha and franja_horaria:
             try:
-                # Combinar fecha y hora y convertirlas en timezone-aware
+                # Dividir la franja horaria en hora de inicio y fin
+                hora_inicio, hora_fin = franja_horaria.split("-")
                 fecha_inicio = make_aware(datetime.strptime(f"{fecha} {hora_inicio}", "%Y-%m-%d %H:%M"), tz)
                 fecha_fin = make_aware(datetime.strptime(f"{fecha} {hora_fin}", "%Y-%m-%d %H:%M"), tz)
 
                 # Validar que fecha_inicio < fecha_fin
                 if fecha_inicio >= fecha_fin:
+                    messages.error(request, "La hora de inicio debe ser anterior a la hora de fin.")
+                    return render(request, 'usuarios/reservar_espacio.html', {'espacio': espacio})
+
+                # Validar disponibilidad del espacio
+                reservas = Reserva.objects.filter(
+                    espacio=espacio,
+                    fecha_inicio__lt=fecha_fin,
+                    fecha_fin__gt=fecha_inicio
+                )
+                eventos = Evento.objects.filter(
+                    espacio=espacio,
+                    fecha_inicio__lt=fecha_fin,
+                    fecha_fin__gt=fecha_inicio
+                )
+
+                if reservas.count() >= espacio.capacidad or eventos.exists():
+                    messages.error(request, "La franja seleccionada no está disponible.")
                     return render(request, 'usuarios/reservar_espacio.html', {'espacio': espacio})
 
                 # Crear la reserva
@@ -191,9 +155,11 @@ def reservar_espacio(request, espacio_id):
                     fecha_fin=fecha_fin,
                 )
                 reserva.save()
+
+                # Actualizar el contador del usuario y redirigir
                 request.user.contador += 1
                 request.user.save()
-                if (request.user.contador == 2):
+                if request.user.contador == 2:
                     return redirect('valorar_app')
                 else:
                     return redirect('perfil_usuario')
@@ -202,7 +168,6 @@ def reservar_espacio(request, espacio_id):
                 messages.error(request, f"Error al procesar la reserva: {str(e)}")
 
     return render(request, 'usuarios/reservar_espacio.html', {'espacio': espacio})
-
 
 def bienvenido(request):
     return render(request, 'bienvenido.html')

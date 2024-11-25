@@ -5,6 +5,11 @@ from .models import Reserva
 
 @admin.register(Reserva)
 class ReservaAdmin(admin.ModelAdmin):
-    list_display = ('usuario', 'espacio', 'fecha_inicio', 'fecha_fin', 'estado')  # Campos visibles en la tabla
-    list_filter = ('estado', 'espacio')  # Filtros en la barra lateral
-    search_fields = ('usuario__username', 'espacio__nombre')  # Campos para la barra de búsqueda
+    list_display = ('usuario', 'espacio', 'fecha_inicio', 'fecha_fin', 'estado', 'codigo_postal')
+    list_filter = ['codigo_postal']
+    search_fields = ['usuario__username', 'codigo_postal']
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs.filter(codigo_postal=request.user.codigo_postal)
+        return qs
