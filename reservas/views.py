@@ -5,7 +5,8 @@ from eventos.models import Evento
 from .forms import ReservaForm
 from django.contrib import messages
 from django.http import JsonResponse
-from django.utils.timezone import make_aware, get_current_timezone, now, localtime
+from django.utils.timezone import make_aware, get_current_timezone, now
+from collections import defaultdict
 
 def crear_reserva(request):
     if request.method == 'POST':
@@ -69,51 +70,34 @@ def horas_disponibles(request, espacio_id, fecha):
             fecha_inicio__date=fecha_seleccionada
         )
 
-        # Obtener eventos existentes que afecten al espacio
-        eventos = Evento.objects.filter(
-            espacio=espacio,
-            fecha_inicio__date=fecha_seleccionada
-        )
+        # Contador de reservas por intervalo de tiempo
+        reservas_por_intervalo = defaultdict(int)
 
-        # Ajustar las horas de inicio para evitar conflictos
+        # Registrar cuántas reservas hay por cada intervalo
         for reserva in reservas:
-            reserva_inicio = reserva.fecha_inicio.astimezone(tz).time()
-            reserva_fin = reserva.fecha_fin.astimezone(tz).time()
+            inicio_reserva = reserva.fecha_inicio.astimezone(tz).time()
+            fin_reserva = reserva.fecha_fin.astimezone(tz).time()
 
-            horas_disponibles_inicio = [
-                hora for hora in horas_disponibles_inicio
-                if not (reserva_inicio.strftime("%H:%M") <= hora < reserva_fin.strftime("%H:%M"))
-            ]
+            for hora in horas_disponibles_inicio:
+                hora_time = datetime.strptime(hora, "%H:%M").time()
+                if inicio_reserva <= hora_time < fin_reserva:
+                    reservas_por_intervalo[hora] += 1
 
-        # Ajustar por eventos
-        for evento in eventos:
-            evento_inicio = evento.fecha_inicio.astimezone(tz).time()
-            evento_fin = evento.fecha_fin.astimezone(tz).time()
-
-            horas_disponibles_inicio = [
-                hora for hora in horas_disponibles_inicio
-                if not (evento_inicio.strftime("%H:%M") <= hora < evento_fin.strftime("%H:%M"))
-            ]
-
-        # Ajustar las horas de fin dinámicamente según la hora de inicio seleccionada
+        # Ajustar las horas de inicio y fin dinámicamente
         horas_disponibles_dict = {}
         for inicio in horas_disponibles_inicio:
-            horas_finales_validas = []
-            for fin in horas_disponibles_fin:
-                if fin > inicio:
-                    conflicto = any(
-                        datetime.strptime(inicio, "%H:%M").time() < reserva.fecha_fin.time() <= datetime.strptime(fin, "%H:%M").time()
-                        or datetime.strptime(fin, "%H:%M").time() > reserva.fecha_inicio.time() >= datetime.strptime(inicio, "%H:%M").time()
-                        for reserva in reservas
-                    ) or any(
-                        datetime.strptime(inicio, "%H:%M").time() < evento.fecha_fin.time() <= datetime.strptime(fin, "%H:%M").time()
-                        or datetime.strptime(fin, "%H:%M").time() > evento.fecha_inicio.time() >= datetime.strptime(inicio, "%H:%M").time()
-                        for evento in eventos
-                    )
-                    if not conflicto:
-                        horas_finales_validas.append(fin)
+            reservas_en_hora = reservas_por_intervalo[inicio]
 
-            horas_disponibles_dict[inicio] = horas_finales_validas
+            if reservas_en_hora < espacio.capacidad:
+                horas_finales_validas = []
+                for fin in horas_disponibles_fin:
+                    if fin > inicio:
+                        reservas_en_fin = reservas_por_intervalo[fin]
+                        if reservas_en_fin < espacio.capacidad:
+                            horas_finales_validas.append(fin)
+
+                if horas_finales_validas:
+                    horas_disponibles_dict[inicio] = horas_finales_validas
 
         return JsonResponse({"horas_disponibles": horas_disponibles_dict})
 
