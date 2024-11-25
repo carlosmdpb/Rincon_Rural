@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.utils.timezone import make_aware, get_current_timezone, now
 from collections import defaultdict
+from django.contrib.auth.decorators import login_required
 
 def crear_reserva(request):
     if request.method == 'POST':
@@ -30,9 +31,10 @@ def crear_reserva(request):
 
     return render(request, 'crear.html', {'form': form})
 
-
+@login_required
 def listar_reservas(request):
     reservas = Reserva.objects.filter(usuario=request.user)
+    reservas = Reserva.objects.filter(codigo_postal=request.user.codigo_postal)
     return render(request, 'listar.html', {'reservas': reservas})
 
 from collections import defaultdict

@@ -10,7 +10,18 @@ from .forms import GestionarDependenciasForm
 # Register your models here.
 
 class EspacioAdmin(admin.ModelAdmin):
-    list_display = ['nombre', 'capacidad', 'disponible', 'hora_apertura', 'hora_cierre', 'mostrar_dependencias']
+    list_display = ['nombre', 'capacidad', 'disponible', 'hora_apertura', 'hora_cierre', 'mostrar_dependencias', 'codigo_postal']
+    list_filter = ['codigo_postal']
+    search_fields = ['nombre', 'codigo_postal']
+
+    def get_queryset(self, request):
+        """
+        Filtra los espacios para mostrar solo aquellos que coincidan con el código postal del superusuario.
+        """
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs.filter(codigo_postal=request.user.codigo_postal)
+        return qs
 
     def mostrar_dependencias(self, obj):
         """

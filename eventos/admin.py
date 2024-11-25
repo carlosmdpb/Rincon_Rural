@@ -3,7 +3,13 @@ from .models import Evento
 
 # Register your models here.
 @admin.register(Evento)
-class ReservaAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'espacio', 'fecha_inicio', 'fecha_fin')  # Campos visibles en la tabla
-    list_filter = ('espacio', 'fecha_inicio')  # Filtros en la barra lateral
-    search_fields = ('nombre', 'descripcion')
+class EventoAdmin(admin.ModelAdmin):
+    list_display = ['nombre', 'espacio', 'codigo_postal']
+    list_filter = ['codigo_postal']
+    search_fields = ['nombre', 'codigo_postal']
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs.filter(codigo_postal=request.user.codigo_postal)
+        return qs

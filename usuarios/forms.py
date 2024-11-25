@@ -81,3 +81,9 @@ class GestionReservaForm(forms.ModelForm):
             raise forms.ValidationError("La fecha de inicio debe ser anterior a la fecha de fin.")
 
         return cleaned_data
+    
+
+class CustomUserCreationForm(UserCreationForm):
+    class Meta:
+        model = Usuario
+        fields = ['username', 'email', 'codigo_postal', 'password1', 'password2']

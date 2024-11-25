@@ -1,11 +1,13 @@
 from datetime import time
 from django.shortcuts import redirect, render, get_object_or_404
 from .models import Espacio
+from django.contrib.auth.decorators import login_required
 from .forms import EspacioForm
 from calificaciones.models import Calificacion
 
 # Create your views here.
 
+@login_required
 def listar_espacios(request):
     filtro_reserva = request.GET.get('reserva_activa', 'todo')
     espacios = Espacio.objects.all()
@@ -13,6 +15,9 @@ def listar_espacios(request):
         espacios = espacios.filter(reserva__isnull=False)
     elif filtro_reserva == 'no':
         espacios = espacios.filter(reserva__isnull=True)
+        
+    espacios = Espacio.objects.filter(codigo_postal=request.user.codigo_postal)
+
     return render(request, 'espacios/listar.html', {'espacios': espacios, 'filtro_reserva': filtro_reserva})
 
 def detalle_espacio(request, espacio_id):
