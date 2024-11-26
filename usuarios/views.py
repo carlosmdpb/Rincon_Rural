@@ -168,7 +168,15 @@ def reservar_espacio(request, espacio_id):
                         grupo_reserva=grupo_reserva
                     )
 
-                return redirect('perfil_usuario')
+                # Incrementar el contador del usuario
+                request.user.contador += 1
+                request.user.save()
+
+                # Redirigir si el contador alcanza 2
+                if request.user.contador == 2:
+                    return redirect('valorar_app')
+                else:
+                    return redirect('perfil_usuario')
 
             except ValueError as e:
                 messages.error(request, f"Error en la reserva: {str(e)}")
