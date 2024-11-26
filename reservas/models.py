@@ -18,3 +18,11 @@ class Reserva(models.Model):
 
     def __str__(self):
         return f"Reserva de {self.usuario} para {self.espacio.nombre} ({self.estado})"
+    
+    def save(self, *args, **kwargs):
+        """
+        Antes de guardar la reserva, asigna el código postal del usuario
+        """
+        if self.usuario:
+            self.codigo_postal = self.usuario.codigo_postal
+        super().save(*args, **kwargs)
