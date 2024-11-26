@@ -95,8 +95,9 @@ def perfil_usuario(request):
     # Obtener la hora actual (ajustada con el desfase necesario)
     hora_actual = now() + timedelta(hours=2)
 
-    # Espacios disponibles
-    espacios = Espacio.objects.filter(disponible=True)
+    # Filtrar espacios por código postal del usuario
+    usuario_codigo_postal = request.user.codigo_postal  # Asegúrate de que este campo exista en el modelo User
+    espacios = Espacio.objects.filter(disponible=True, codigo_postal=usuario_codigo_postal)
 
     # Agrupar reservas activas
     reservas_activas = Reserva.objects.filter(usuario=request.user, fecha_fin__gte=hora_actual).order_by('fecha_inicio')

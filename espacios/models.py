@@ -9,7 +9,7 @@ class Espacio(models.Model):
     hora_apertura = models.TimeField()
     hora_cierre = models.TimeField()
     dependencias = models.ManyToManyField('self', symmetrical=False, blank=True)
-    codigo_postal = models.CharField(max_length=5, default="00000")
+    codigo_postal = models.CharField(max_length=5)
 
     def __str__(self):
         return self.nombre

@@ -8,7 +8,7 @@ class Reserva(models.Model):
     espacio = models.ForeignKey(Espacio, on_delete=models.CASCADE)
     fecha_inicio = models.DateTimeField()
     fecha_fin = models.DateTimeField()
-    codigo_postal = models.CharField(max_length=5, default="00000")
+    codigo_postal = models.CharField(max_length=5)
     grupo_reserva = models.UUIDField(default=uuid.uuid4, editable=False)  # Campo para agrupar
     ESTADOS = [
         ('activa', 'Activa'),

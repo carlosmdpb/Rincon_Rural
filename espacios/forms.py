@@ -20,8 +20,8 @@ class EspacioForm(forms.ModelForm):
             
 class GestionarDependenciasForm(forms.ModelForm):
     dependencias = forms.ModelMultipleChoiceField(
-        queryset=Espacio.objects.all(),
-        widget=forms.CheckboxSelectMultiple,  # Usar una lista de checkboxes
+        queryset=Espacio.objects.none(),
+        widget=forms.CheckboxSelectMultiple,
         required=False,
         label="Dependencias"
     )
@@ -29,3 +29,12 @@ class GestionarDependenciasForm(forms.ModelForm):
     class Meta:
         model = Espacio
         fields = ['dependencias']
+
+    def __init__(self, *args, **kwargs):
+        request = kwargs.pop('request', None)  # Obtener el request si se pasa
+        super().__init__(*args, **kwargs)
+
+        if request and request.user.is_superuser:
+            self.fields['dependencias'].queryset = Espacio.objects.filter(
+                codigo_postal=request.user.codigo_postal
+            )
