@@ -14,7 +14,7 @@ class Evento(models.Model):
     fecha_inicio = models.DateTimeField()
     fecha_fin = models.DateTimeField()
     descripcion = models.TextField(blank=True, null=True)
-    codigo_postal = models.CharField(max_length=5, default="00000")
+    codigo_postal = models.CharField(max_length=5)
 
     def __str__(self):
         return self.nombre
@@ -24,35 +24,47 @@ class Evento(models.Model):
         inicio_dia = localtime(self.fecha_inicio).replace(hour=0, minute=0, second=0, microsecond=0)
         fin_dia = localtime(self.fecha_inicio).replace(hour=23, minute=59, second=59, microsecond=999999)
 
-        reservas_a_eliminar = Reserva.objects.filter(
+        # Filtrar reservas afectadas
+        reservas_afectadas = Reserva.objects.filter(
             espacio=self.espacio,
             fecha_inicio__lt=self.fecha_fin,  # Reservas que comienzan antes de que termine el evento
             fecha_fin__gt=self.fecha_inicio   # Reservas que terminan después de que comienza el evento
         )
+
+        # Identificar los grupos de reservas afectados
+        grupos_afectados = reservas_afectadas.values_list('grupo_reserva', flat=True).distinct()
+
+        # Obtener todas las reservas de los grupos afectados
+        reservas_a_eliminar = Reserva.objects.filter(grupo_reserva__in=grupos_afectados)
+
+        # Notificar a los usuarios afectados
         subject = "Reservas eliminadas"
-        body = "Se han eliminado las siguientes reservas: " + str(reservas_a_eliminar)
         sender = 'rinconrural24@gmail.com'
         password = 'njpb zzdb dujv daef'
-        usuario_email_send = []
-        for reserva in reservas_a_eliminar:
-            usuario = reserva.usuario.email
-            if usuario not in usuario_email_send:
-                usuario_email_send.append(usuario)
-                self.send_mail(subject, body, sender, usuario, password)
+        usuarios_notificados = set()
 
-        # Eliminar las reservas
+        for reserva in reservas_a_eliminar:
+            usuario_email = reserva.usuario.email
+            if usuario_email not in usuarios_notificados:
+                body = f"Estimado/a {reserva.usuario.username},\n\n"
+                body += f"Se ha cancelado su reserva en el espacio '{reserva.espacio.nombre}' "
+                body += f"debido a la programación de un evento que se superpone con su horario.\n\n"
+                body += "Gracias por su comprensión."
+                self.send_mail(subject, body, sender, [usuario_email], password)
+                usuarios_notificados.add(usuario_email)
+
+        # Eliminar todas las reservas afectadas
         reservas_a_eliminar.delete()
 
-        # Llamar al método save del modelo base para guardar el evento
+        # Guardar el evento
         super().save(*args, **kwargs)
-    
-            
+
     def send_mail(self, subject, body, sender, recipients, password):
         message = MIMEText(body)
         message["Subject"] = subject
         message["From"] = sender
         message["To"] = ", ".join(recipients)
-        
+
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp_server:
             smtp_server.login(sender, password)
             smtp_server.sendmail(sender, recipients, message.as_string())

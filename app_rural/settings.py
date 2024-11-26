@@ -138,9 +138,3 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'  # Carpeta donde se recopilarán los arch
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-
-
-
-
-
