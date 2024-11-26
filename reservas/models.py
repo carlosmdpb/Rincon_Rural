@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from espacios.models import Espacio
+import uuid
 
 class Reserva(models.Model):
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -8,6 +9,7 @@ class Reserva(models.Model):
     fecha_inicio = models.DateTimeField()
     fecha_fin = models.DateTimeField()
     codigo_postal = models.CharField(max_length=5, default="00000")
+    grupo_reserva = models.UUIDField(default=uuid.uuid4, editable=False)  # Campo para agrupar
     ESTADOS = [
         ('activa', 'Activa'),
         ('cancelada', 'Cancelada'),

@@ -214,7 +214,7 @@ function cargarFranjasDisponibles(fechaSeleccionada, duracion) {
                 franjaHorariaSelect.innerHTML = `<option value="">Seleccione una franja horaria</option>`;
                 data.franjas_disponibles.forEach(([inicio, fin]) => {
                     const option = document.createElement("option");
-                    option.value = `${inicio}-${fin}`;
+                    option.value = `${inicio}-${fin}`; // Enviamos el rango completo
                     option.textContent = `${inicio} - ${fin}`;
                     franjaHorariaSelect.appendChild(option);
                 });

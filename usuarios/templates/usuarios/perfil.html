@@ -65,10 +65,7 @@
         ul li span {
             color: #004d00;
             font-size: 1rem;
-        }
-
-        ul li form {
-            margin: 0;
+            flex: 1; /* El texto ocupa el espacio disponible */
         }
 
         button {
@@ -80,11 +77,16 @@
             background: #3cc03c; /* Botones en verde brillante */
             cursor: pointer;
             transition: background 0.3s ease, transform 0.2s ease;
+            margin-left: 15px;
         }
 
         button:hover {
             background: #28a028; /* Hover más oscuro */
             transform: translateY(-3px);
+        }
+
+        button.cancelar {
+            background: #f56c79; /* Botón rojo para cancelar */
         }
 
         a {
@@ -124,16 +126,32 @@
 
         <h2>Reservas Activas</h2>
         <ul>
-            {% for reserva in reservas_activas %}
+            {% for grupo, reservas in reservas_activas.items %}
                 <li>
-                    <span>{{ reserva.espacio.nombre }}: {{ reserva.fecha_inicio|date:"d/m/Y H:i" }} - {{ reserva.fecha_fin|date:"d/m/Y H:i" }}
-                    ({{ reserva.get_estado_display }})</span>
-                    <form action="{% url 'cancelar_reserva' reserva.id %}" method="post" style="display:inline;">
-                        {% csrf_token %}
-                        <button type="submit" onclick="return confirm('¿Estás seguro de que deseas cancelar esta reserva?');" style="background-color: #f56c79; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">
-                            Cancelar
-                        </button>
-                    </form>
+                    <span>
+                        <strong>{{ reservas.0.espacio.nombre }}</strong>: 
+                        {{ reservas.0.fecha_inicio|date:"d/m/Y H:i" }} - 
+                        {% with reservas|last as ultima_reserva %}
+                            {{ ultima_reserva.fecha_fin|date:"d/m/Y H:i" }}
+                        {% endwith %}
+                    </span>
+                    {% if reservas|length > 1 %}
+                        <!-- Botón para reservas agrupadas -->
+                        <form action="{% url 'cancelar_reserva_grupo' grupo %}" method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="cancelar" onclick="return confirm('¿Estás seguro de que deseas cancelar esta reserva?');">
+                                Cancelar 
+                            </button>
+                        </form>
+                    {% else %}
+                        <!-- Botón para reservas individuales -->
+                        <form action="{% url 'cancelar_reserva' reservas.0.id %}" method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="cancelar" onclick="return confirm('¿Estás seguro de que deseas cancelar esta reserva?');">
+                                Cancelar
+                            </button>
+                        </form>
+                    {% endif %}
                 </li>
             {% empty %}
                 <li>No tienes reservas activas.</li>
@@ -142,9 +160,15 @@
 
         <h2>Reservas Pasadas</h2>
         <ul>
-            {% for reserva in reservas_pasadas %}
+            {% for grupo, reservas in reservas_pasadas.items %}
                 <li>
-                    <span>{{ reserva.espacio.nombre }}: {{ reserva.fecha_inicio|date:"d/m/Y H:i" }} - {{ reserva.fecha_fin|date:"d/m/Y H:i" }}</span>
+                    <span>
+                        <strong>{{ reservas.0.espacio.nombre }}</strong>: 
+                        {{ reservas.0.fecha_inicio|date:"d/m/Y H:i" }} - 
+                        {% with reservas|last as ultima_reserva %}
+                            {{ ultima_reserva.fecha_fin|date:"d/m/Y H:i" }}
+                        {% endwith %}
+                    </span>
                 </li>
             {% empty %}
                 <li>No tienes reservas pasadas.</li>

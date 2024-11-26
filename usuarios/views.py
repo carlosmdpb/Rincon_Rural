@@ -15,6 +15,7 @@ from django.contrib.messages import get_messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
 from django.utils.timezone import make_aware, get_current_timezone, now
+import uuid
 
 # Vista para el registro de usuarios
 def registro(request):
@@ -91,79 +92,85 @@ def cerrar_sesion(request):
 
 @login_required
 def perfil_usuario(request):
-    # Obtener la hora actual y restarle una hora
+    # Obtener la hora actual (ajustada con el desfase necesario)
     hora_actual = now() + timedelta(hours=2)
 
     # Espacios disponibles
     espacios = Espacio.objects.filter(disponible=True)
-    
-    # Reservas activas
-    reservas_activas = Reserva.objects.filter(usuario=request.user, fecha_fin__gte=hora_actual)
-    
-    # Reservas pasadas
-    reservas_pasadas = Reserva.objects.filter(usuario=request.user, fecha_fin__lt=hora_actual)
-    
+
+    # Agrupar reservas activas
+    reservas_activas = Reserva.objects.filter(usuario=request.user, fecha_fin__gte=hora_actual).order_by('fecha_inicio')
+    reservas_activas_agrupadas = {}
+    for reserva in reservas_activas:
+        grupo = reserva.grupo_reserva
+        if grupo not in reservas_activas_agrupadas:
+            reservas_activas_agrupadas[grupo] = []
+        reservas_activas_agrupadas[grupo].append(reserva)
+
+    # Agrupar reservas pasadas
+    reservas_pasadas = Reserva.objects.filter(usuario=request.user, fecha_fin__lt=hora_actual).order_by('fecha_inicio')
+    reservas_pasadas_agrupadas = {}
+    for reserva in reservas_pasadas:
+        grupo = reserva.grupo_reserva
+        if grupo not in reservas_pasadas_agrupadas:
+            reservas_pasadas_agrupadas[grupo] = []
+        reservas_pasadas_agrupadas[grupo].append(reserva)
+
     return render(request, 'usuarios/perfil.html', {
         'usuario': request.user,
         'espacios': espacios,
-        'reservas_activas': reservas_activas,
-        'reservas_pasadas': reservas_pasadas
+        'reservas_activas': reservas_activas_agrupadas,
+        'reservas_pasadas': reservas_pasadas_agrupadas,
     })
 
 @login_required
 def reservar_espacio(request, espacio_id):
     espacio = get_object_or_404(Espacio, id=espacio_id)
-    tz = get_current_timezone()  # Obtener la zona horaria actual
+    tz = get_current_timezone()
 
     if request.method == 'POST':
         fecha = request.POST.get('fecha')
-        franja_horaria = request.POST.get('franja_horaria')  # Recibir la franja horaria seleccionada
+        franja_horaria = request.POST.get('franja_horaria')  # Formato "HH:MM-HH:MM"
 
         if fecha and franja_horaria:
             try:
-                # Dividir la franja horaria en hora de inicio y fin
+                # Dividir la franja seleccionada en hora de inicio y fin
                 hora_inicio, hora_fin = franja_horaria.split("-")
-                fecha_inicio = make_aware(datetime.strptime(f"{fecha} {hora_inicio}", "%Y-%m-%d %H:%M"), tz)
-                fecha_fin = make_aware(datetime.strptime(f"{fecha} {hora_fin}", "%Y-%m-%d %H:%M"), tz)
+                inicio = make_aware(datetime.strptime(f"{fecha} {hora_inicio}", "%Y-%m-%d %H:%M"), tz)
+                fin = make_aware(datetime.strptime(f"{fecha} {hora_fin}", "%Y-%m-%d %H:%M"), tz)
 
-                # Validar que fecha_inicio < fecha_fin
-                if fecha_inicio >= fecha_fin:
-                    messages.error(request, "La hora de inicio debe ser anterior a la hora de fin.")
-                    return render(request, 'usuarios/reservar_espacio.html', {'espacio': espacio})
+                # Generar todas las franjas de 1 hora dentro del rango seleccionado
+                franjas = []
+                hora_actual = inicio
+                while hora_actual < fin:
+                    siguiente_hora = hora_actual + timedelta(hours=1)
+                    franjas.append((hora_actual, siguiente_hora))
+                    hora_actual = siguiente_hora
 
-                # Validar disponibilidad del espacio
-                reservas = Reserva.objects.filter(
-                    espacio=espacio,
-                    fecha_inicio__lt=fecha_fin,
-                    fecha_fin__gt=fecha_inicio
-                )
-                eventos = Evento.objects.filter(
-                    espacio=espacio,
-                    fecha_inicio__lt=fecha_fin,
-                    fecha_fin__gt=fecha_inicio
-                )
+                # Validar y crear reservas con un mismo grupo_reserva
+                grupo_reserva = uuid.uuid4()  # Generar un identificador único para el grupo
+                for franja_inicio, franja_fin in franjas:
+                    reservas = Reserva.objects.filter(
+                        espacio=espacio,
+                        fecha_inicio__lt=franja_fin,
+                        fecha_fin__gt=franja_inicio
+                    )
+                    if reservas.count() >= espacio.capacidad:
+                        raise ValueError("No hay suficiente capacidad en una de las franjas seleccionadas.")
 
-                if reservas.count() >= espacio.capacidad or eventos.exists():
-                    messages.error(request, "La franja seleccionada no está disponible.")
-                    return render(request, 'usuarios/reservar_espacio.html', {'espacio': espacio})
+                    # Crear la reserva
+                    Reserva.objects.create(
+                        usuario=request.user,
+                        espacio=espacio,
+                        fecha_inicio=franja_inicio,
+                        fecha_fin=franja_fin,
+                        grupo_reserva=grupo_reserva
+                    )
 
-                # Crear la reserva
-                reserva = Reserva(
-                    usuario=request.user,
-                    espacio=espacio,
-                    fecha_inicio=fecha_inicio,
-                    fecha_fin=fecha_fin,
-                )
-                reserva.save()
+                return redirect('perfil_usuario')
 
-                # Actualizar el contador del usuario y redirigir
-                request.user.contador += 1
-                request.user.save()
-                if request.user.contador == 2:
-                    return redirect('valorar_app')
-                else:
-                    return redirect('perfil_usuario')
-
+            except ValueError as e:
+                messages.error(request, f"Error en la reserva: {str(e)}")
             except Exception as e:
                 messages.error(request, f"Error al procesar la reserva: {str(e)}")
 
