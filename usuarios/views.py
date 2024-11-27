@@ -92,36 +92,52 @@ def cerrar_sesion(request):
 
 @login_required
 def perfil_usuario(request):
-    # Obtener la hora actual (ajustada con el desfase necesario)
-    hora_actual = now() + timedelta(hours=2)
+    # Obtener la hora actual con desfase
+    hora_actual = now() + timedelta(hours=1)
 
-    # Filtrar espacios por código postal del usuario
-    usuario_codigo_postal = request.user.codigo_postal  # Asegúrate de que este campo exista en el modelo User
+    # Filtrar espacios disponibles por código postal
+    usuario_codigo_postal = request.user.codigo_postal.strip()
     espacios = Espacio.objects.filter(disponible=True, codigo_postal=usuario_codigo_postal)
 
-    # Agrupar reservas activas
-    reservas_activas = Reserva.objects.filter(usuario=request.user, fecha_fin__gte=hora_actual).order_by('fecha_inicio')
+    # Filtrar eventos activos por código postal y rango de fechas
+    eventos_activos = Evento.objects.filter(
+        codigo_postal=usuario_codigo_postal,
+        fecha_fin__gte=hora_actual  # Solo eventos cuya fecha fin no ha pasado
+    )
+
+    # Debugging: Asegúrate de que encuentras eventos
+    print(f"Eventos activos encontrados: {eventos_activos.count()}")
+    for evento in eventos_activos:
+        print(f"Evento: {evento.nombre}, Inicio: {evento.fecha_inicio}, Fin: {evento.fecha_fin}, Código Postal: {evento.codigo_postal}")
+
+    # Agrupar reservas activas autorizadas
+    reservas_activas_autorizadas = Reserva.objects.filter(
+        usuario=request.user, 
+        fecha_fin__gte=hora_actual,
+        autorizada=True  # Solo reservas autorizadas
+    ).order_by('fecha_inicio')
+
     reservas_activas_agrupadas = {}
-    for reserva in reservas_activas:
+    for reserva in reservas_activas_autorizadas:
         grupo = reserva.grupo_reserva
         if grupo not in reservas_activas_agrupadas:
             reservas_activas_agrupadas[grupo] = []
         reservas_activas_agrupadas[grupo].append(reserva)
 
-    # Agrupar reservas pasadas
-    reservas_pasadas = Reserva.objects.filter(usuario=request.user, fecha_fin__lt=hora_actual).order_by('fecha_inicio')
-    reservas_pasadas_agrupadas = {}
-    for reserva in reservas_pasadas:
-        grupo = reserva.grupo_reserva
-        if grupo not in reservas_pasadas_agrupadas:
-            reservas_pasadas_agrupadas[grupo] = []
-        reservas_pasadas_agrupadas[grupo].append(reserva)
+    # Filtrar reservas pendientes de autorización
+    reservas_pendientes = Reserva.objects.filter(
+        usuario=request.user, 
+        fecha_fin__gte=hora_actual,
+        autorizada=False  # Solo reservas no autorizadas
+    ).order_by('fecha_inicio')
 
+    # Renderizar la plantilla con todos los datos necesarios
     return render(request, 'usuarios/perfil.html', {
         'usuario': request.user,
         'espacios': espacios,
+        'eventos_activos': eventos_activos,
         'reservas_activas': reservas_activas_agrupadas,
-        'reservas_pasadas': reservas_pasadas_agrupadas,
+        'reservas_pendientes': reservas_pendientes,  # Agregar reservas no autorizadas al contexto
     })
 
 @login_required
@@ -159,13 +175,14 @@ def reservar_espacio(request, espacio_id):
                     if reservas.count() >= espacio.capacidad:
                         raise ValueError("No hay suficiente capacidad en una de las franjas seleccionadas.")
 
-                    # Crear la reserva
+                    # Crear la reserva con autorización basada en el espacio
                     Reserva.objects.create(
                         usuario=request.user,
                         espacio=espacio,
                         fecha_inicio=franja_inicio,
                         fecha_fin=franja_fin,
-                        grupo_reserva=grupo_reserva
+                        grupo_reserva=grupo_reserva,
+                        autorizada=not espacio.autorizacion  # Si `autorizacion` está activa, no se autoriza automáticamente
                     )
 
                 # Incrementar el contador del usuario

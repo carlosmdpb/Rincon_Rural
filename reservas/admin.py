@@ -5,9 +5,19 @@ from espacios.models import Espacio
 
 @admin.register(Reserva)
 class ReservaAdmin(admin.ModelAdmin):
-    list_display = ('usuario', 'espacio', 'fecha_inicio', 'fecha_fin', 'estado', 'codigo_postal')
+    list_display = ('usuario', 'espacio', 'fecha_inicio', 'fecha_fin', 'estado', 'codigo_postal', 'autorizada')
     list_filter = ['codigo_postal']
     search_fields = ['usuario__username', 'codigo_postal']
+    actions = ['autorizar_reservas']
+
+    def autorizar_reservas(self, request, queryset):
+        """
+        Acción para autorizar reservas seleccionadas.
+        """
+        queryset.update(autorizada=True)
+        self.message_user(request, f"{queryset.count()} reservas autorizadas.")
+    
+    autorizar_reservas.short_description = "Autorizar reservas seleccionadas"
 
     def get_queryset(self, request):
         """

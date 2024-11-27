@@ -5,7 +5,7 @@ from django.contrib.auth.models import Group
 
 class UsuarioAdmin(UserAdmin):
     # Campos que se mostrarán en la lista de usuarios
-    list_display = ('username', 'email', 'dni', 'rol', 'is_active', 'is_staff', 'is_superuser', 'codigo_postal')
+    list_display = ('username', 'nombre', 'apellidos', 'email', 'dni', 'rol', 'is_active', 'is_staff', 'is_superuser', 'codigo_postal')
     list_filter = ['codigo_postal']
 
     def get_queryset(self, request):
@@ -20,7 +20,7 @@ class UsuarioAdmin(UserAdmin):
     # Campos que se mostrarán al editar/crear un usuario
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
-        ('Información Personal', {'fields': ('first_name', 'last_name', 'email', 'dni')}),  # Incluye el campo DNI
+        ('Información Personal', {'fields': ('nombre', 'apellidos', 'email', 'dni')}),  # Incluye el campo DNI
         ('Permisos', {'fields': ('is_active', 'is_staff', 'is_superuser')}),
         ('Fechas Importantes', {'fields': ('last_login', 'date_joined')}),
         ('Rol Personalizado', {'fields': ('rol',)}),  # Agregar campos personalizados aquí
@@ -31,7 +31,7 @@ class UsuarioAdmin(UserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('username', 'password1', 'password2', 'email', 'dni', 'rol', 'is_active', 'codigo_postal'),  # Incluye DNI y código postal
+            'fields': ('username', 'nombre', 'apellidos', 'password1', 'password2', 'email', 'dni', 'rol', 'is_active', 'codigo_postal'),  # Incluye DNI y código postal
         }),
     )
 

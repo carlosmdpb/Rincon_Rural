@@ -7,7 +7,7 @@ from django.utils.safestring import mark_safe
 class EspacioForm(forms.ModelForm):
     class Meta:
         model = Espacio
-        fields = ['nombre', 'capacidad', 'descripcion', 'disponible', 'hora_apertura', 'hora_cierre']
+        fields = ['nombre', 'capacidad', 'descripcion', 'disponible', 'autorizacion', 'hora_apertura', 'hora_cierre']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

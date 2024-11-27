@@ -9,6 +9,8 @@ class Usuario(AbstractUser):
         ('ciudadano', 'Ciudadano'),
         ('administrador', 'Administrador'),
     ]
+    nombre = models.CharField(max_length=50, blank=False, null=False, default='')
+    apellidos = models.CharField(max_length=50, blank=False, null=False, default='')
     rol = models.CharField(max_length=15, choices=ROLES, default='ciudadano')
     dni = models.CharField(max_length=15, unique=True, blank=True, null=True)  
     codigo_postal = models.CharField(max_length=5, blank=False, null=False)
