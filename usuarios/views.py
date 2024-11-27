@@ -105,11 +105,6 @@ def perfil_usuario(request):
         fecha_fin__gte=hora_actual  # Solo eventos cuya fecha fin no ha pasado
     )
 
-    # Debugging: Asegúrate de que encuentras eventos
-    print(f"Eventos activos encontrados: {eventos_activos.count()}")
-    for evento in eventos_activos:
-        print(f"Evento: {evento.nombre}, Inicio: {evento.fecha_inicio}, Fin: {evento.fecha_fin}, Código Postal: {evento.codigo_postal}")
-
     # Agrupar reservas activas autorizadas
     reservas_activas_autorizadas = Reserva.objects.filter(
         usuario=request.user, 
@@ -124,12 +119,19 @@ def perfil_usuario(request):
             reservas_activas_agrupadas[grupo] = []
         reservas_activas_agrupadas[grupo].append(reserva)
 
-    # Filtrar reservas pendientes de autorización
-    reservas_pendientes = Reserva.objects.filter(
+    # Filtrar y agrupar reservas pendientes de autorización
+    reservas_pendientes_no_agrupadas = Reserva.objects.filter(
         usuario=request.user, 
         fecha_fin__gte=hora_actual,
         autorizada=False  # Solo reservas no autorizadas
     ).order_by('fecha_inicio')
+
+    reservas_pendientes_agrupadas = {}
+    for reserva in reservas_pendientes_no_agrupadas:
+        grupo = reserva.grupo_reserva
+        if grupo not in reservas_pendientes_agrupadas:
+            reservas_pendientes_agrupadas[grupo] = []
+        reservas_pendientes_agrupadas[grupo].append(reserva)
 
     # Renderizar la plantilla con todos los datos necesarios
     return render(request, 'usuarios/perfil.html', {
@@ -137,7 +139,7 @@ def perfil_usuario(request):
         'espacios': espacios,
         'eventos_activos': eventos_activos,
         'reservas_activas': reservas_activas_agrupadas,
-        'reservas_pendientes': reservas_pendientes,  # Agregar reservas no autorizadas al contexto
+        'reservas_pendientes': reservas_pendientes_agrupadas,  # Agrupadas
     })
 
 @login_required

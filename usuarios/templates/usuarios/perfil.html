@@ -164,22 +164,43 @@
 
         <h2>Reservas Pendientes de Autorización</h2>
 <ul>
-    {% for reserva in reservas_pendientes %}
-        <li>
-            {{ reserva.espacio.nombre }} - 
-            {{ reserva.fecha_inicio|date:"d/m/Y H:i" }} a 
-            {{ reserva.fecha_fin|date:"d/m/Y H:i" }}
-            <span style="color: red;">(Pendiente de autorización)</span>
+    {% for grupo, reservas in reservas_pendientes.items %}
+        <li style="background-color: #ffebee;">
+            <span>
+                <strong>{{ reservas.0.espacio.nombre }}</strong>: 
+                {{ reservas.0.fecha_inicio|date:"d/m/Y H:i" }} - 
+                {% with reservas|last as ultima_reserva %}
+                    {{ ultima_reserva.fecha_fin|date:"d/m/Y H:i" }}
+                {% endwith %}
+                <span style="color: red;">(Pendiente de autorización)</span>
+            </span>
+            {% if reservas|length > 1 %}
+                <!-- Botón para cancelar reservas agrupadas -->
+                <form action="{% url 'cancelar_reserva_grupo' grupo %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="cancelar" onclick="return confirm('¿Estás seguro de que deseas cancelar todas las reservas en este grupo?');">
+                        Cancelar 
+                    </button>
+                </form>
+            {% else %}
+                <!-- Botón para cancelar una reserva individual -->
+                <form action="{% url 'cancelar_reserva' reservas.0.id %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="cancelar" onclick="return confirm('¿Estás seguro de que deseas cancelar esta reserva?');">
+                        Cancelar
+                    </button>
+                </form>
+            {% endif %}
         </li>
     {% empty %}
         <li>No tienes reservas pendientes de autorización.</li>
     {% endfor %}
 </ul>
 
-        <h2>Reservas Activas</h2>
+<h2>Reservas Activas</h2>
 <ul>
     {% for grupo, reservas in reservas_activas.items %}
-        <li style="background-color: {% if reservas|length > 1 %}#d1e7ff{% else %}#e3f2fd{% endif %};">
+        <li style="background-color: #e3f2fd;">
             <span>
                 <strong>{{ reservas.0.espacio.nombre }}</strong>: 
                 {{ reservas.0.fecha_inicio|date:"d/m/Y H:i" }} - 
@@ -209,6 +230,7 @@
         <li>No tienes reservas activas.</li>
     {% endfor %}
 </ul>
+
 
         <h2>Eventos Activos</h2>
 <ul>
