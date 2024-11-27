@@ -11,6 +11,17 @@ class RegistroForm(UserCreationForm):
     class Meta:
         model = Usuario
         fields = ['username', 'email', 'dni', 'codigo_postal', 'password1', 'password2']
+        labels = {
+            'username': 'Nombre de usuario',
+            'email': 'Correo electrónico',
+            'dni': 'DNI',
+            'codigo_postal': 'Código postal',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['password1'].label = 'Contraseña'
+        self.fields['password2'].label = 'Confirmación de contraseña'
 
     def clean_dni(self):
         dni = self.cleaned_data.get('dni')
@@ -29,9 +40,6 @@ class RegistroForm(UserCreationForm):
         user.is_active = False  # Usuario inactivo hasta que se apruebe
         if commit:
             user.save()
-            # Crear la solicitud de registro automáticamente
-            from solicitud.models import SolicitudRegistro
-            SolicitudRegistro.objects.create(usuario=user)
         return user
 
 
@@ -87,3 +95,4 @@ class CustomUserCreationForm(UserCreationForm):
     class Meta:
         model = Usuario
         fields = ['username', 'email', 'codigo_postal', 'password1', 'password2']
+        
