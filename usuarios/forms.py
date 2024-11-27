@@ -10,9 +10,11 @@ import re
 class RegistroForm(UserCreationForm):
     class Meta:
         model = Usuario
-        fields = ['username', 'email', 'dni', 'codigo_postal', 'password1', 'password2']
+        fields = ['username','nombre','apellidos', 'email', 'dni', 'codigo_postal', 'password1', 'password2']
         labels = {
             'username': 'Nombre de usuario',
+            'nombre': 'Nombre',
+            'apellidos': 'Apellidos',
             'email': 'Correo electrónico',
             'dni': 'DNI',
             'codigo_postal': 'Código postal',
@@ -20,6 +22,8 @@ class RegistroForm(UserCreationForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['nombre'].required = True
+        self.fields['apellidos'].required = True
         self.fields['password1'].label = 'Contraseña'
         self.fields['password2'].label = 'Confirmación de contraseña'
 
