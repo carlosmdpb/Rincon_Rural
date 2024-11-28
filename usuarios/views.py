@@ -16,6 +16,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
 from django.utils.timezone import make_aware, get_current_timezone, now
 import uuid
+from django.conf import settings  # Para acceder a la configuración de archivos estáticos
+import os
 
 # Vista para el registro de usuarios
 def registro(request):
@@ -92,6 +94,7 @@ def cerrar_sesion(request):
 
 @login_required
 def perfil_usuario(request):
+
     # Obtener la hora actual con desfase
     hora_actual = now() + timedelta(hours=1)
 
@@ -133,6 +136,12 @@ def perfil_usuario(request):
             reservas_pendientes_agrupadas[grupo] = []
         reservas_pendientes_agrupadas[grupo].append(reserva)
 
+    # Determinar el escudo según el código postal del usuario
+    escudo_url = f"escudos/{usuario_codigo_postal}.png"
+    ruta_escudos = os.path.join(settings.BASE_DIR, "static", escudo_url)
+    if not os.path.exists(ruta_escudos):
+        escudo_url = "escudos/default.png"
+
     # Renderizar la plantilla con todos los datos necesarios
     return render(request, 'usuarios/perfil.html', {
         'usuario': request.user,
@@ -140,6 +149,7 @@ def perfil_usuario(request):
         'eventos_activos': eventos_activos,
         'reservas_activas': reservas_activas_agrupadas,
         'reservas_pendientes': reservas_pendientes_agrupadas,  # Agrupadas
+        'escudo_url': escudo_url,  # Ruta del escudo
     })
 
 @login_required
