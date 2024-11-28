@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Perfil de Usuario</title>
+    {% load static %}
     <style>
         * {
             margin: 0;
@@ -20,6 +21,43 @@
             justify-content: center;
             align-items: center;
             padding: 20px;
+            overflow-x: hidden;
+        }
+
+        /* Formas geométricas */
+        .shape-rectangle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            transform: skewX(-15deg);
+        }
+
+        .shape-rectangle:nth-child(1) {
+            top: 10%;
+            left: -5%;
+            width: 200px;
+            height: 600px;
+        }
+
+        .shape-rectangle:nth-child(2) {
+            top: 20%;
+            right: -5%;
+            width: 300px;
+            height: 500px;
+        }
+
+        .shape-rectangle:nth-child(3) {
+            top: 60%;
+            left: 15%;
+            width: 400px;
+            height: 300px;
+        }
+
+        .shape-rectangle:nth-child(4) {
+            bottom: 5%;
+            right: 20%;
+            width: 250px;
+            height: 400px;
         }
 
         .container {
@@ -140,9 +178,26 @@
             font-size: 0.9rem;
             color: #7f8c8d; /* Gris claro */
         }
+
+        .escudo {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 150px;
+            height: auto;
+        }
     </style>
 </head>
 <body>
+
+    <!-- Formas geométricas para el fondo -->
+    <div class="shape-rectangle"></div>
+    <div class="shape-rectangle"></div>
+    <div class="shape-rectangle"></div>
+    <div class="shape-rectangle"></div>
+
+    <img src="{% static escudo_url %}" alt="Escudo del municipio" class="escudo">
+
     <div class="container">
         <h1>Bienvenido, {{ usuario.username }}</h1>
         <p>Email: <strong>{{ usuario.email }}</strong></p>

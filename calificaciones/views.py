@@ -5,6 +5,10 @@ from .models import Calificacion
 
 @login_required
 def valorar_app(request):
+
+    if request.user.contador != 2:
+        return redirect('perfil_usuario')
+
     if request.method == 'POST':
         puntuacion = request.POST.get('puntuacion')
 
