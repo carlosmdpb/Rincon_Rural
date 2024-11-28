@@ -8,7 +8,7 @@ from django.utils.safestring import mark_safe
 from .forms import GestionarDependenciasForm
 
 class EspacioAdmin(admin.ModelAdmin):
-    list_display = ['nombre', 'capacidad', 'disponible', 'hora_apertura', 'hora_cierre', 'mostrar_dependencias', 'codigo_postal']
+    list_display = ['nombre', 'capacidad', 'disponible', 'autorizacion', 'hora_apertura', 'hora_cierre', 'mostrar_dependencias', 'codigo_postal']
     list_filter = ['codigo_postal']
     search_fields = ['nombre', 'codigo_postal']
 

@@ -12,9 +12,9 @@
         }
 
         body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #9be79b, #3cc03c); /* Fondo verde suave */
-            color: #004d00; /* Texto verde oscuro */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to bottom, #43cea2, #185a9d); /* Fondo gradiente azul-verde */
+            color: #2c3e50; /* Texto gris oscuro */
             height: 100vh;
             display: flex;
             justify-content: center;
@@ -23,73 +23,101 @@
         }
 
         .container {
-            background: #e6ffe6; /* Fondo verde claro */
+            background: rgba(255, 255, 255, 0.9); /* Fondo blanco con transparencia */
+            border-radius: 20px;
             padding: 30px 40px;
-            border-radius: 12px;
-            box-shadow: 0px 10px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 0px 20px 30px rgba(0, 0, 0, 0.2);
             max-width: 400px;
+            width: 100%;
             text-align: center;
-            border: 2px solid #3cc03c;
+            border: 2px solid #43cea2;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
 
         h1 {
             font-size: 2rem;
             margin-bottom: 20px;
-            color: #004d00; /* Verde oscuro */
+            color: #185a9d; /* Azul intenso */
         }
 
         form {
             display: flex;
             flex-direction: column;
             align-items: center;
+            width: 100%;
         }
 
         form input {
             margin-bottom: 15px;
             padding: 10px;
             border-radius: 6px;
-            border: 1px solid #3cc03c; /* Borde verde */
+            border: 1px solid #185a9d; /* Borde azul */
             outline: none;
             font-size: 1rem;
-            width: 100%;
-            max-width: 300px;
+            width: calc(100% - 20px);
+            background: #e3f2fd; /* Fondo azul claro */
         }
 
         form button {
-            padding: 10px 20px;
+            padding: 12px 25px;
             border: none;
-            border-radius: 6px;
+            border-radius: 20px;
             font-size: 1.2rem;
-            color: white;
-            background: #3cc03c; /* Botón verde brillante */
+            color: #fff;
+            background: linear-gradient(to right, #43cea2, #185a9d); /* Botón degradado */
             cursor: pointer;
             transition: background 0.3s ease, transform 0.2s ease;
+            width: 100%;
+            max-width: 300px;
+            margin-top: 10px;
         }
 
         form button:hover {
-            background: #28a028; /* Hover verde más oscuro */
-            transform: translateY(-3px);
+            background: linear-gradient(to right, #185a9d, #43cea2);
+            transform: scale(1.05);
         }
 
         .register-link {
             margin-top: 20px;
             font-size: 1rem;
             text-decoration: none;
-            color: #3cc03c;
+            color: #185a9d;
+            font-weight: bold;
             transition: color 0.3s ease;
         }
 
         .register-link:hover {
-            color: #28a028; /* Hover más oscuro */
+            color: #43cea2; /* Hover más claro */
         }
 
-        .logo img {
-            width: 100px;
-            height: 100px;
-            margin: 0 auto 20px;
-            border-radius: 50%;
-            box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.2);
-        }
+        .logo {
+    position: relative; /* Permite posicionar el logo sobre el contenedor */
+    top: -40px; /* Eleva el logo hacia arriba */
+    margin-bottom: -20px; /* Ajusta el margen inferior */
+}
+
+.logo img {
+    width: 120px; /* Incrementar tamaño del logo */
+    height: 120px; /* Ajustar altura */
+    display: block; /* Asegura que esté centrado */
+    margin: 0 auto;
+    box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.2); /* Mantener la sombra */
+    border-radius: 50%; /* Si la imagen lo requiere */
+    background: white; /* Fondo blanco para integrarlo con el contenedor */
+    padding: 10px; /* Espaciado para dar un efecto limpio */
+}
+
 
         .messages {
             margin-bottom: 20px;
@@ -110,7 +138,7 @@
     <div class="container">
         <div class="logo">
             {% load static %}
-            <img src="{% static 'images/logo_without_text.png' %}" alt="Logo del Sistema de Gestión Rural">
+            <img src="{% static 'images/36450.png' %}" alt="Logo del Sistema de Gestión Rural">
         </div>
         <h1>Iniciar Sesión</h1>
 
@@ -125,9 +153,17 @@
 
         <form method="post">
             {% csrf_token %}
-            {{ form.as_p }}
+            <div>
+                <label for="id_username">Nombre de Usuario</label>
+                <input type="text" name="username" id="id_username">
+            </div>
+            <div>
+                <label for="id_password">Contraseña</label>
+                <input type="password" name="password" id="id_password">
+            </div>
             <button type="submit">Iniciar Sesión</button>
         </form>
+        
         <a href="{% url 'registro' %}" class="register-link">¿No tienes cuenta? Regístrate aquí</a>
     </div>
 </body>

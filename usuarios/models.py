@@ -73,8 +73,3 @@ class Usuario(AbstractUser):
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp_server:
             smtp_server.login(sender, password)
             smtp_server.sendmail(sender, recipients, message.as_string())
-
-class ConfiguracionPueblo(models.Model):
-    nombre_pueblo = models.CharField(max_length=100)
-    codigo_postal = models.CharField(max_length=5, unique=True)
-    escudo = models.ImageField(upload_to='escudos/', blank=True, null=True)

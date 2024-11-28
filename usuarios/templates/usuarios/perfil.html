@@ -12,9 +12,9 @@
         }
 
         body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #9be79b, #3cc03c); /* Fondo gradiente verde */
-            color: #004d00;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to bottom, #43cea2, #185a9d); /* Fondo gradiente azul-verde */
+            color: #2c3e50; /* Texto gris oscuro */
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -23,70 +23,100 @@
         }
 
         .container {
-            background: #e6ffe6; /* Fondo verde muy claro */
-            border: 2px solid #3cc03c;
+            background: rgba(255, 255, 255, 0.9); /* Fondo blanco con transparencia */
+            border-radius: 20px;
             padding: 30px 40px;
-            border-radius: 12px;
-            box-shadow: 0px 10px 15px rgba(0, 0, 0, 0.1);
-            max-width: 700px;
+            box-shadow: 0px 20px 30px rgba(0, 0, 0, 0.2);
+            max-width: 900px;
             width: 100%;
+            animation: fadeIn 1s ease-in-out;
         }
 
-        h1, h2 {
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        h1 {
             text-align: center;
-            margin-bottom: 20px;
-            color: #004d00; /* Verde oscuro */
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #185a9d; /* Azul intenso */
         }
 
         p {
             text-align: center;
             margin-bottom: 20px;
-            font-size: 1rem;
+            font-size: 1.2rem;
+            color: #34495e; /* Gris oscuro */
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            color: #185a9d;
+            margin: 20px 0 10px;
+            border-bottom: 2px solid #43cea2;
+            padding-bottom: 5px;
         }
 
         ul {
             list-style: none;
             padding: 0;
-            margin: 0 0 20px 0;
+            margin: 20px 0;
         }
 
         ul li {
-            background: #d4f5d4; /* Fondo verde suave */
+            background: #e3f2fd; /* Fondo azul claro */
             margin-bottom: 15px;
-            padding: 15px;
-            border-radius: 6px;
-            border-left: 5px solid #3cc03c;
-            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 15px 20px;
+            border-radius: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        ul li:hover {
+            transform: translateY(-5px);
+            box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.15);
         }
 
         ul li span {
-            color: #004d00;
+            color: #185a9d;
             font-size: 1rem;
-            flex: 1; /* El texto ocupa el espacio disponible */
+            flex: 1;
+            font-weight: bold;
         }
 
         button {
             padding: 10px 20px;
             border: none;
-            border-radius: 6px;
+            border-radius: 20px;
             font-size: 1rem;
-            color: white;
-            background: #3cc03c; /* Botones en verde brillante */
+            color: #fff;
+            background: linear-gradient(to right, #43cea2, #185a9d); /* Botón degradado */
             cursor: pointer;
             transition: background 0.3s ease, transform 0.2s ease;
-            margin-left: 15px;
         }
 
         button:hover {
-            background: #28a028; /* Hover más oscuro */
-            transform: translateY(-3px);
+            background: linear-gradient(to right, #185a9d, #43cea2);
+            transform: scale(1.05);
         }
 
         button.cancelar {
-            background: #f56c79; /* Botón rojo para cancelar */
+            background: #e53935; /* Rojo vibrante */
+        }
+
+        button.cancelar:hover {
+            background: #d32f2f;
         }
 
         a {
@@ -94,20 +124,28 @@
             text-align: center;
             margin-top: 20px;
             text-decoration: none;
-            font-size: 1rem;
-            color: #3cc03c;
+            font-size: 1.2rem;
+            color: #185a9d;
+            font-weight: bold;
             transition: color 0.3s ease;
         }
 
         a:hover {
-            color: #28a028; /* Hover del enlace */
+            color: #43cea2;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.9rem;
+            color: #7f8c8d; /* Gris claro */
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Bienvenido, {{ usuario.username }}</h1>
-        <p>Email: {{ usuario.email }}</p>
+        <p>Email: <strong>{{ usuario.email }}</strong></p>
 
         <h2>Espacios Disponibles</h2>
         <ul>
@@ -124,57 +162,75 @@
             {% endfor %}
         </ul>
 
+        <h2>Reservas Pendientes de Autorización</h2>
+<ul>
+    {% for reserva in reservas_pendientes %}
+        <li>
+            {{ reserva.espacio.nombre }} - 
+            {{ reserva.fecha_inicio|date:"d/m/Y H:i" }} a 
+            {{ reserva.fecha_fin|date:"d/m/Y H:i" }}
+            <span style="color: red;">(Pendiente de autorización)</span>
+        </li>
+    {% empty %}
+        <li>No tienes reservas pendientes de autorización.</li>
+    {% endfor %}
+</ul>
+
         <h2>Reservas Activas</h2>
-        <ul>
-            {% for grupo, reservas in reservas_activas.items %}
-                <li>
-                    <span>
-                        <strong>{{ reservas.0.espacio.nombre }}</strong>: 
-                        {{ reservas.0.fecha_inicio|date:"d/m/Y H:i" }} - 
-                        {% with reservas|last as ultima_reserva %}
-                            {{ ultima_reserva.fecha_fin|date:"d/m/Y H:i" }}
-                        {% endwith %}
-                    </span>
-                    {% if reservas|length > 1 %}
-                        <!-- Botón para reservas agrupadas -->
-                        <form action="{% url 'cancelar_reserva_grupo' grupo %}" method="post" style="display:inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="cancelar" onclick="return confirm('¿Estás seguro de que deseas cancelar esta reserva?');">
-                                Cancelar 
-                            </button>
-                        </form>
-                    {% else %}
-                        <!-- Botón para reservas individuales -->
-                        <form action="{% url 'cancelar_reserva' reservas.0.id %}" method="post" style="display:inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="cancelar" onclick="return confirm('¿Estás seguro de que deseas cancelar esta reserva?');">
-                                Cancelar
-                            </button>
-                        </form>
-                    {% endif %}
-                </li>
-            {% empty %}
-                <li>No tienes reservas activas.</li>
-            {% endfor %}
-        </ul>
+<ul>
+    {% for grupo, reservas in reservas_activas.items %}
+        <li style="background-color: {% if reservas|length > 1 %}#d1e7ff{% else %}#e3f2fd{% endif %};">
+            <span>
+                <strong>{{ reservas.0.espacio.nombre }}</strong>: 
+                {{ reservas.0.fecha_inicio|date:"d/m/Y H:i" }} - 
+                {% with reservas|last as ultima_reserva %}
+                    {{ ultima_reserva.fecha_fin|date:"d/m/Y H:i" }}
+                {% endwith %}
+            </span>
+            {% if reservas|length > 1 %}
+                <!-- Botón para reservas agrupadas -->
+                <form action="{% url 'cancelar_reserva_grupo' grupo %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="cancelar" onclick="return confirm('¿Estás seguro de que deseas cancelar esta reserva?');">
+                        Cancelar
+                    </button>
+                </form>
+            {% else %}
+                <!-- Botón para reservas individuales -->
+                <form action="{% url 'cancelar_reserva' reservas.0.id %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="cancelar" onclick="return confirm('¿Estás seguro de que deseas cancelar esta reserva?');">
+                        Cancelar
+                    </button>
+                </form>
+            {% endif %}
+        </li>
+    {% empty %}
+        <li>No tienes reservas activas.</li>
+    {% endfor %}
+</ul>
 
-        <h2>Reservas Pasadas</h2>
-        <ul>
-            {% for grupo, reservas in reservas_pasadas.items %}
-                <li>
-                    <span>
-                        <strong>{{ reservas.0.espacio.nombre }}</strong>: 
-                        {{ reservas.0.fecha_inicio|date:"d/m/Y H:i" }} - 
-                        {% with reservas|last as ultima_reserva %}
-                            {{ ultima_reserva.fecha_fin|date:"d/m/Y H:i" }}
-                        {% endwith %}
-                    </span>
-                </li>
-            {% empty %}
-                <li>No tienes reservas pasadas.</li>
-            {% endfor %}
-        </ul>
-
+        <h2>Eventos Activos</h2>
+<ul>
+    {% for evento in eventos_activos %}
+        <li>
+            <strong>{{ evento.nombre }}</strong>
+            <br>
+            Inicio: {{ evento.fecha_inicio|date:"d/m/Y H:i" }}
+            <br>
+            Fin: {{ evento.fecha_fin|date:"d/m/Y H:i" }}
+            <br>
+            Descripción: {{ evento.descripcion }}
+            <br>
+            Espacio: {{evento.espacio}}
+        </li>
+    {% empty %}
+        <li>No hay eventos activos en tu zona.</li>
+    {% endfor %}
+</ul>
+        <footer>
+            <p>¡Disfruta de tu pueblo!</p>
+        </footer>
         <a href="{% url 'logout' %}">Cerrar Sesión</a>
     </div>
 </body>

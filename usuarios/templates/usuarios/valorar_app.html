@@ -1,39 +1,67 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Valorar Aplicación</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        * {
             margin: 0;
             padding: 0;
-            background-color: #f7f7f7;
+            box-sizing: border-box;
         }
-        .container {
-            max-width: 400px;
-            margin: 50px auto;
-            background: #fff;
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to bottom, #43cea2, #185a9d); /* Fondo gradiente azul-verde */
+            color: #2c3e50; /* Texto gris oscuro */
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.9); /* Fondo blanco con transparencia */
+            border-radius: 20px;
+            padding: 30px 40px;
+            box-shadow: 0px 20px 30px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+            width: 100%;
             text-align: center;
+            animation: fadeIn 1s ease-in-out;
         }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
         h2 {
-            color: #333;
+            font-size: 2rem;
             margin-bottom: 10px;
+            color: #185a9d; /* Azul intenso */
         }
+
         p {
-            color: #666;
-            font-size: 18px;
+            font-size: 1.2rem;
+            color: #34495e; /* Gris oscuro */
             margin-bottom: 20px;
         }
+
         .emoji-rating {
             display: flex;
             justify-content: space-around;
             margin-bottom: 20px;
         }
+
         .emoji-rating button {
             background: none;
             border: none;
@@ -41,25 +69,47 @@
             font-size: 40px;
             transition: transform 0.2s;
         }
+
         .emoji-rating button:hover {
             transform: scale(1.2);
         }
+
         .emoji-rating button:focus {
             outline: none;
         }
+
         button.submit {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
+            padding: 12px 25px;
             border: none;
-            border-radius: 5px;
-            font-size: 18px;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            color: #fff;
+            background: linear-gradient(to right, #43cea2, #185a9d); /* Botón degradado */
             cursor: pointer;
-            margin-top: 20px;
+            transition: background 0.3s ease, transform 0.2s ease;
+            display: block;
+            margin: 20px auto;
             width: 100%;
         }
+
         button.submit:hover {
-            background-color: #45a049;
+            background: linear-gradient(to right, #185a9d, #43cea2);
+            transform: scale(1.05);
+        }
+
+        /* Mensajes */
+        .messages {
+            margin-bottom: 20px;
+            font-size: 1rem;
+            color: #185a9d;
+        }
+
+        .messages.success {
+            color: #28a745;
+        }
+
+        .messages.error {
+            color: #dc3545;
         }
     </style>
 </head>
@@ -71,7 +121,7 @@
         <!-- Mensajes de error o éxito -->
         {% if messages %}
             {% for message in messages %}
-                <div class="{{ message.tags }}">{{ message }}</div>
+                <div class="messages {{ message.tags }}">{{ message }}</div>
             {% endfor %}
         {% endif %}
 
