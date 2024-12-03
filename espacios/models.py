@@ -31,3 +31,10 @@ class Espacio(models.Model):
             if not dependencia.disponible:
                 return False
         return True
+    
+class ImagenEspacio(models.Model):
+    espacio = models.ForeignKey(Espacio, related_name='imagenes', on_delete=models.CASCADE)
+    imagen = models.ImageField(upload_to='static/images/espacios/')
+
+    def __str__(self):
+        return f"Imagen de {self.espacio.nombre}"
