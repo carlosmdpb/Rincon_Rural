@@ -3,14 +3,19 @@ from django.http import HttpRequest
 from django.http.response import HttpResponse
 from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import path, reverse
-from .models import Espacio
+from .models import Espacio, ImagenEspacio
 from django.utils.safestring import mark_safe
 from .forms import GestionarDependenciasForm
+
+class ImagenEspacioInline(admin.TabularInline):
+    model = ImagenEspacio
+    extra = 1  # Número de formularios vacíos para añadir nuevas imágenes
 
 class EspacioAdmin(admin.ModelAdmin):
     list_display = ['nombre', 'capacidad', 'disponible', 'autorizacion', 'hora_apertura', 'hora_cierre', 'mostrar_dependencias', 'codigo_postal']
     list_filter = ['codigo_postal']
     search_fields = ['nombre', 'codigo_postal']
+    inlines = [ImagenEspacioInline]
 
     def get_queryset(self, request):
         """

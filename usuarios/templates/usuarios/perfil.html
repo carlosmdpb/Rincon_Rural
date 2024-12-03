@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <title>Perfil de Usuario</title>
     {% load static %}
     <style>
@@ -121,6 +122,119 @@
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
+        ul li img {
+            max-width: 150px;
+            border-radius: 10px;
+            margin-right: 15px;
+            cursor: pointer;
+        }
+
+        /* Modal estilizado */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9); /* Fondo oscuro */
+    backdrop-filter: blur(5px); /* Desenfoque */
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.modal-content {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 70%;
+    max-width: 900px;
+    max-height: 80%;
+    background: rgba(255, 255, 255, 0.1); /* Fondo translúcido */
+    border-radius: 10px;
+    box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.7); /* Sombra destacada */
+}
+
+.modal-content img {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 10px;
+    transition: transform 0.3s ease;
+}
+
+.modal-content img:hover {
+    transform: scale(1.05); /* Zoom */
+}
+
+/* Flechas */
+.modal .arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    font-size: 2rem;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.5);
+    transition: transform 0.3s ease, background 0.3s ease;
+    z-index: 1100; /* Siempre visible */
+}
+
+.modal .arrow.left {
+    left: -60px; /* Fuera del flujo */
+}
+
+.modal .arrow.right {
+    right: -60px; /* Fuera del flujo */
+}
+
+.modal .arrow:hover {
+    transform: scale(1.2);
+    background: #43cea2; /* Verde brillante */
+}
+
+/* Botón de cierre */
+.modal .close {
+    position: absolute;
+    top: -60px;
+    right: -20px;
+    font-size: 1.8rem;
+    color: white;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 1100;
+}
+
+.modal .close:hover {
+    background: #f44336; /* Rojo */
+}
+
         ul li:hover {
             transform: translateY(-5px);
             box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.15);
@@ -207,15 +321,33 @@
             {% for espacio in espacios %}
                 <li>
                     <span>{{ espacio.nombre }} - Capacidad: {{ espacio.capacidad }}</span>
+                    <!-- Primera imagen del espacio como miniatura -->
+                    {% if espacio.imagenes.exists %}
+                        <img src="{{ espacio.imagenes.first.imagen.url }}" alt="Imagen de {{ espacio.nombre }}" 
+                             onclick="openModal({{ espacio.id }})">
+                    {% endif %}
+
                     <form method="post" action="{% url 'reservar_espacio' espacio.id %}">
                         {% csrf_token %}
                         <button type="submit">Reservar</button>
                     </form>
                 </li>
-            {% empty %}
-                <li>No hay espacios disponibles.</li>
             {% endfor %}
         </ul>
+        
+        <div id="imageModal" class="modal">
+            <div class="modal-content">
+                <!-- Botón de cierre -->
+                <button class="close" onclick="closeModal()">×</button>
+                <!-- Flecha izquierda -->
+                <button class="arrow left" onclick="previousImage()">&#10094;</button>
+                <!-- Imagen principal -->
+                <img id="modalImage" src="" alt="Imagen del espacio">
+                <!-- Flecha derecha -->
+                <button class="arrow right" onclick="nextImage()">&#10095;</button>
+            </div>
+        </div>
+              
 
         <h2>Reservas Pendientes de Autorización</h2>
 <ul>
@@ -310,5 +442,58 @@
         </footer>
         <a href="{% url 'logout' %}">Cerrar Sesión</a>
     </div>
+
+    <script>
+    const espaciosData = {
+    {% for espacio in espacios %}
+    "{{ espacio.id }}": [
+        {% for imagen in espacio.imagenes.all %}
+        "{{ imagen.imagen.url }}" {% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ] {% if not forloop.last %},{% endif %}
+    {% endfor %}
+};
+
+let currentSpaceId = null;
+let currentImageIndex = 0;
+
+// Abre el modal
+function openModal(spaceId) {
+    const modal = document.getElementById('imageModal');
+    const images = espaciosData[spaceId];
+
+    if (images && images.length > 0) {
+        currentSpaceId = spaceId;
+        currentImageIndex = 0;
+        document.getElementById('modalImage').src = images[currentImageIndex];
+        modal.style.display = 'flex';
+    }
+}
+
+// Cierra el modal
+function closeModal() {
+    const modal = document.getElementById('imageModal');
+    modal.style.display = 'none';
+}
+
+// Imagen anterior
+function previousImage() {
+    if (!currentSpaceId) return;
+
+    const images = espaciosData[currentSpaceId];
+    currentImageIndex = (currentImageIndex - 1 + images.length) % images.length;
+    document.getElementById('modalImage').src = images[currentImageIndex];
+}
+
+// Siguiente imagen
+function nextImage() {
+    if (!currentSpaceId) return;
+
+    const images = espaciosData[currentSpaceId];
+    currentImageIndex = (currentImageIndex + 1) % images.length;
+    document.getElementById('modalImage').src = images[currentImageIndex];
+}
+
+    </script>
 </body>
 </html>
