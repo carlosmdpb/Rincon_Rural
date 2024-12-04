@@ -332,7 +332,9 @@
                         <button type="submit">Reservar</button>
                     </form>
                 </li>
-            {% endfor %}
+            {% empty %}
+        <li>No hay espacios disponibles.</li>
+    {% endfor %}
         </ul>
         
         <div id="imageModal" class="modal">
@@ -365,7 +367,7 @@
                 <!-- Botón para cancelar reservas agrupadas -->
                 <form action="{% url 'cancelar_reserva_grupo' grupo %}" method="post" style="display:inline;">
                     {% csrf_token %}
-                    <button type="submit" class="cancelar" onclick="return confirm('¿Estás seguro de que deseas cancelar todas las reservas en este grupo?');">
+                    <button type="submit" class="cancelar" onclick="return confirm('¿Estás seguro de que deseas cancelar la reserva?');">
                         Cancelar 
                     </button>
                 </form>

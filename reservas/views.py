@@ -137,7 +137,7 @@ def dias_no_disponibles(request, espacio_id):
 
         # Analizar los próximos 30 días
         fecha_actual = now().astimezone(tz)
-        for i in range(30):  # Revisar los próximos 30 días
+        for i in range(90):  # Revisar los próximos 30 días
             fecha = fecha_actual.date() + timedelta(days=i)
             fecha_inicio_dia = make_aware(datetime.combine(fecha, espacio.hora_apertura), tz)
             fecha_fin_dia = make_aware(datetime.combine(fecha, espacio.hora_cierre), tz)
