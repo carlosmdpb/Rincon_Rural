@@ -18,7 +18,7 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
             overflow: hidden;
             position: relative;
@@ -128,6 +128,102 @@
             font-size: 1.5rem;
             font-weight: bold;
         }
+
+        footer {
+            width: 100%;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px 10px;
+            color: white;
+            font-size: 0.9rem;
+            margin-top: 40px; /* Añadido para separar del contenido superior */
+        }
+
+        .highlight {
+            font-weight: bold;
+            color: #ffdf00;
+        }
+
+        .chat-bubble {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: #185a9d;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            z-index: 1000;
+        }
+
+        .chat-panel {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 300px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+            display: none;
+            flex-direction: column;
+            z-index: 1000;
+        }
+
+        .chat-header {
+            background: #185a9d;
+            color: white;
+            padding: 10px;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header button {
+            background: transparent;
+            color: white;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        form#chat-form {
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        form#chat-form textarea {
+            width: 100%;
+            height: 100px;
+            resize: none;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 1rem;
+        }
+
+        form#chat-form button {
+            background: #43cea2;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        form#chat-form button:hover {
+            background: #185a9d;
+        }
+
     </style>
 </head>
 <body>
@@ -153,5 +249,71 @@
         <a href="{% url 'login' %}">Iniciar Sesión</a>
         <a href="{% url 'registro' %}">Registrarse</a>
     </div>
+
+    <footer>
+        <p style="margin-bottom: 10px;">
+            <span class="highlight">Representantes municipales:</span> Solicite credenciales para acceder al sistema de su municipio.
+        </p>
+        <p style="font-size: 0.8rem; line-height: 1.4;">
+            <span class="highlight">Dirección:</span> Calle Betis, 23, Sevilla<br>
+            <span class="highlight">Correo:</span> rinconrural24@gmail.com<br>
+            <span class="highlight">Teléfono:</span> +34 900 123 456<br>
+            <span class="highlight">Horario:</span> Lunes a Viernes, 9:00 AM - 5:00 PM
+        </p>
+    </footer>
+
+    <div class="chat-bubble" onclick="toggleChatPanel()">
+        <span>💬</span>
+    </div>
+    
+    <div id="chat-panel" class="chat-panel">
+        <div class="chat-header">
+            <span>Contáctanos</span>
+            <button onclick="toggleChatPanel()">✖</button>
+        </div>
+        <form id="chat-form" onsubmit="submitChatForm(event)">
+            <textarea name="message" placeholder="Escribe tu mensaje aquí..." required></textarea>
+            <button type="submit">Enviar</button>
+        </form>
+    </div>
+
+    <script>
+        function toggleChatPanel() {
+            const chatPanel = document.getElementById('chat-panel');
+            chatPanel.style.display = chatPanel.style.display === 'none' || chatPanel.style.display === '' ? 'flex' : 'none';
+        }
+    
+        async function submitChatForm(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const message = formData.get('message');
+    
+            try {
+                const response = await fetch('/send-message/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ message })
+                });
+    
+                if (response.ok) {
+                    alert('Mensaje enviado correctamente.');
+                    event.target.reset();
+                    toggleChatPanel();
+                } else {
+                    alert('Mensaje enviado correctamente.');
+                    event.target.reset();
+                    toggleChatPanel();
+                }
+            } catch (error) {
+                alert('Error de red. Inténtalo de nuevo más tarde.');
+            }
+        }
+    </script>
+    
+    
+    
 </body>
 </html>
