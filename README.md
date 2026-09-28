@@ -1,72 +1,99 @@
-# Gestión de Espacios Rurales
+# Rincón Rural
 
-## Descripción
+Aplicación web para gestionar y reservar espacios de una localidad rural: por ejemplo, salas o instalaciones compartidas. Los ciudadanos consultan los espacios asociados a su código postal y solicitan reservas; los responsables gestionan espacios, eventos y autorizaciones.
 
-**Sistema de Gestión Rural** es una aplicación web desarrollada en **Django** (Python) que facilita la administración y reserva de espacios rurales en pueblos con menos de 15,000 habitantes. La plataforma cuenta con dos interfaces principales:
-
-1. **Interfaz de Usuario**: Para usuarios que buscan reservar espacios rurales.
-2. **Interfaz de Administrador**: Para administradores que gestionan los espacios disponibles en su localidad.
-
-Esta aplicación promueve el desarrollo rural al facilitar el acceso a recursos y fomentar el turismo sostenible en áreas de baja densidad poblacional.
-
----
+Proyecto académico desarrollado en equipo con Django. Organiza la gestión municipal alrededor de usuarios, espacios y franjas horarias.
 
 ## Funcionalidades
 
-### Para Usuarios
-- Registro e inicio de sesión.
-- Búsqueda de espacios rurales por pueblo y disponibilidad.
-- Visualización de detalles de los espacios (descripción, fotos, capacidad, precios, etc.).
-- Reserva de espacios disponibles.
-- Gestión de reservas (visualización, modificación o cancelación).
+- Registro de ciudadanos con aprobación de la cuenta antes del acceso.
+- Inicio de sesión y perfil con información de espacios, reservas y eventos.
+- Consulta de espacios por código postal, con capacidad, descripción, imágenes y horarios.
+- Reservas con comprobaciones de fechas, horario de apertura y solapamientos.
+- Reservas agrupadas y dependencias entre espacios.
+- Gestión y cancelación de reservas, incluidas las que coinciden con un evento.
+- Autorización de reservas y notificaciones por correo.
+- Gestión mediante Django Admin y valoración general de la aplicación.
 
-### Para Administradores
-- Registro e inicio de sesión.
-- Creación de espacios rurales en su pueblo (nombre, descripción, fotos, capacidad, disponibilidad, etc.).
-- Eliminación de espacios que ya no estén disponibles.
-- Visualización de las reservas realizadas en los espacios administrados.
+## Tecnologías y arquitectura
 
----
+| Área | Implementación |
+| --- | --- |
+| Backend | Python y Django |
+| Interfaz | Plantillas HTML, CSS y JavaScript |
+| Datos | SQLite en la configuración incluida |
+| Usuarios | Modelo propio basado en `AbstractUser` |
+| Administración | Django Admin |
+| Imágenes | `ImageField`, que requiere Pillow |
+| Correo | Llamadas SMTP desde los modelos |
 
-## Tecnologías Utilizadas
+El proyecto separa sus funciones en aplicaciones Django: `usuarios`, `espacios`, `reservas`, `eventos` y `calificaciones`. Las vistas y formularios gestionan las interacciones; los modelos representan las entidades y algunas acciones asociadas a sus cambios.
 
-- **Backend**: Django (Python)
-- **Base de Datos**: SQLite (desarrollo) / PostgreSQL (producción)
-- **Frontend**: HTML5, CSS3, JavaScript (utilizando frameworks como Bootstrap para el diseño responsivo).
-- **Otros**: Django Admin para la gestión del panel de administradores.
+## Ejecutar en local
 
----
+Requisitos: Python compatible con la versión de Django instalada. `requirements.txt` declara `Django>=4.2` sin límite superior; no fija un entorno reproducible.
 
-## Requisitos del Sistema
+```sh
+git clone https://github.com/carlosmdpb/Rincon_Rural.git
+cd Rincon_Rural
+python -m venv .venv
+```
 
-1. **Python**: Versión 3.8 o superior.
-2. **Django**: Versión 4.x o superior.
-3. **Base de datos**: SQLite para pruebas locales o PostgreSQL para producción.
-4. Dependencias adicionales listadas en `requirements.txt`.
+Activar el entorno:
 
----
+```powershell
+# Windows / PowerShell
+.\.venv\Scripts\Activate.ps1
+```
 
-## Instalación y Configuración
+```sh
+# Linux / macOS
+source .venv/bin/activate
+```
 
-```bash
-git clone https://github.com/usuario/gestion-espacios-rurales.git
-cd gestion-espacios-rurales
-
-### Crear un entorno virtual
-python -m venv venv
-
-### Activar el entorno
-# WINDOWS
-venv\Scripts\activate
-# LINUX
-source venv/bin/active
-
-### Instalar dependencias
-pip install -r requirements.txt
-
-### Migración de datos
+```sh
+python -m pip install -r requirements.txt
+python -m pip install Pillow
 python manage.py migrate
 python manage.py createsuperuser
-
-### Ejecutar servidor
 python manage.py runserver
+```
+
+Pillow se instala aparte porque los modelos usan imágenes pero la dependencia no figura en `requirements.txt`.
+
+- Inicio: [http://127.0.0.1:8000/](http://127.0.0.1:8000/).
+- Registro: [http://127.0.0.1:8000/usuarios/registro/](http://127.0.0.1:8000/usuarios/registro/).
+- Administración: [http://127.0.0.1:8000/usuarios/admin/](http://127.0.0.1:8000/usuarios/admin/).
+
+El repositorio incluye `db.sqlite3`. Para una demostración con datos propios, hacer una copia de seguridad y utilizar una base nueva creada por las migraciones. No se publican credenciales de usuarios existentes.
+
+### Recorrido de prueba
+
+1. Crear espacios y usuarios de demostración con el mismo código postal.
+2. Consultar la lista de espacios y solicitar una reserva dentro de su horario.
+3. Revisar la reserva desde el perfil y la administración.
+
+Las cuentas registradas comienzan inactivas. Su activación y otras acciones pueden enviar correo: hay que configurar el correo para un entorno de pruebas antes de recorrer esos flujos.
+
+## Estructura
+
+```text
+app_rural/      Configuración y rutas del proyecto
+usuarios/       Cuentas, roles y perfil
+espacios/       Instalaciones, imágenes y dependencias
+reservas/       Fechas, disponibilidad y reservas agrupadas
+eventos/        Actividades y conflictos con reservas
+calificaciones/ Valoración de la aplicación
+static/         Recursos de la interfaz
+manage.py       Comandos Django
+```
+
+Para leer las reglas del sistema: [modelo de espacios](espacios/models.py), [validación de reservas](reservas/forms.py) y [rutas](app_rural/urls.py).
+
+## Estado y limitaciones
+
+La configuración incluida es de desarrollo con SQLite y `DEBUG=True`. No incorpora configuración PostgreSQL de producción.
+
+Antes de publicar o desplegar, es necesario retirar las credenciales SMTP incluidas en el código, revocarlas y sustituirlas por configuración externa. También debe revisarse la base SQLite para excluir datos personales.
+
+Los archivos de pruebas requieren corrección: `usuarios/tests.py` realiza consultas al importar el módulo y usa símbolos no importados. No se presenta como una suite funcional. Tras corregirla, el comando Django será `python manage.py test`.
