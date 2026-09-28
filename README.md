@@ -2,6 +2,12 @@
 
 Aplicación web para gestionar y reservar espacios de una localidad rural: por ejemplo, salas o instalaciones compartidas. Los ciudadanos consultan los espacios asociados a su código postal y solicitan reservas; los responsables gestionan espacios, eventos y autorizaciones.
 
+![Python](https://img.shields.io/badge/Python-Backend-3776AB?logo=python&logoColor=white)
+![Django](https://img.shields.io/badge/Django-Web-092E20?logo=django&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-Database-003B57?logo=sqlite&logoColor=white)
+![HTML5](https://img.shields.io/badge/HTML5-Frontend-E34F26?logo=html5&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-Interfaz-F7DF1E?logo=javascript&logoColor=white)
+
 Proyecto académico desarrollado en equipo con Django. Organiza la gestión municipal alrededor de usuarios, espacios y franjas horarias.
 
 ## Funcionalidades
