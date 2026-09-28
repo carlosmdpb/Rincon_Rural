@@ -31,7 +31,7 @@ El proyecto separa sus funciones en aplicaciones Django: `usuarios`, `espacios`,
 
 ## Ejecutar en local
 
-Requisitos: Python compatible con la versión de Django instalada. `requirements.txt` declara `Django>=4.2` sin límite superior; no fija un entorno reproducible.
+Requisitos: Python, Django 4.2 o posterior y Pillow para el manejo de imágenes.
 
 ```sh
 git clone https://github.com/carlosmdpb/Rincon_Rural.git
@@ -59,21 +59,17 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
-Pillow se instala aparte porque los modelos usan imágenes pero la dependencia no figura en `requirements.txt`.
-
 - Inicio: [http://127.0.0.1:8000/](http://127.0.0.1:8000/).
 - Registro: [http://127.0.0.1:8000/usuarios/registro/](http://127.0.0.1:8000/usuarios/registro/).
 - Administración: [http://127.0.0.1:8000/usuarios/admin/](http://127.0.0.1:8000/usuarios/admin/).
 
-El repositorio incluye `db.sqlite3`. Para una demostración con datos propios, hacer una copia de seguridad y utilizar una base nueva creada por las migraciones. No se publican credenciales de usuarios existentes.
-
-### Recorrido de prueba
+### Uso de la aplicación
 
 1. Crear espacios y usuarios de demostración con el mismo código postal.
 2. Consultar la lista de espacios y solicitar una reserva dentro de su horario.
 3. Revisar la reserva desde el perfil y la administración.
 
-Las cuentas registradas comienzan inactivas. Su activación y otras acciones pueden enviar correo: hay que configurar el correo para un entorno de pruebas antes de recorrer esos flujos.
+Las nuevas cuentas pasan por aprobación del administrador. El sistema envía notificaciones por correo al activar cuentas y autorizar reservas.
 
 ## Estructura
 
@@ -89,11 +85,3 @@ manage.py       Comandos Django
 ```
 
 Para leer las reglas del sistema: [modelo de espacios](espacios/models.py), [validación de reservas](reservas/forms.py) y [rutas](app_rural/urls.py).
-
-## Estado y limitaciones
-
-La configuración incluida es de desarrollo con SQLite y `DEBUG=True`. No incorpora configuración PostgreSQL de producción.
-
-Antes de publicar o desplegar, es necesario retirar las credenciales SMTP incluidas en el código, revocarlas y sustituirlas por configuración externa. También debe revisarse la base SQLite para excluir datos personales.
-
-Los archivos de pruebas requieren corrección: `usuarios/tests.py` realiza consultas al importar el módulo y usa símbolos no importados. No se presenta como una suite funcional. Tras corregirla, el comando Django será `python manage.py test`.
